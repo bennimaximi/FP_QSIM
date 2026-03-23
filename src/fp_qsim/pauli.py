@@ -13,7 +13,6 @@ def sigmaz():
                      [0, -1]], dtype=complex)
 
 
-# 1. Retrieve the matrices
 sx = sigmax()
 sy = sigmay()
 sz = sigmaz()
@@ -21,3 +20,13 @@ sz = sigmaz()
 print("Sigma X:\n", sx)
 print("Sigma Y:\n", sy) 
 print("Sigma Z:\n", sz)
+
+
+#check equation:
+left_side = sx @ sy
+right_side = 1j * sz
+
+if np.allclose(left_side, right_side):
+    print("The equation σxσy = iσz holds.")
+else:
+    print("The equation σxσy = iσz does NOT hold.")
