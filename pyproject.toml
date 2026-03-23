@@ -9,9 +9,11 @@ authors = [
 requires-python = ">=3.11"
 dependencies = [
     "ipykernel>=7.2.0",
+    "mypy>=1.19.1",
     "numpy>=2.4.3",
     "pre-commit>=4.5.1",
     "ruff>=0.15.7",
+    "ty>=0.0.24",
 ]
 
 [build-system]
@@ -21,8 +23,35 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 100
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "site-packages",
+    "venv",
+]
+
 
 [tool.ruff.format]
 quote-style = "single"
 indent-style = "tab"
 docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true  # This forces you to write -> np.ndarray
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "numpy.*"
+ignore_missing_imports = true
