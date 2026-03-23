@@ -27,6 +27,6 @@ left_side = sx @ sy
 right_side = 1j * sz
 
 if np.allclose(left_side, right_side):
-	print('The equation σxσy = iσz holds.')
+	print('The equation sxsy = isz holds.')
 else:
-	print('The equation σxσy = iσz does NOT hold.')
+	print('The equation sxsy = isz does NOT hold.')
