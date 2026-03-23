@@ -1,5 +1,5 @@
 from fp_qsim import hello
-from fp_qsim.pauli import sigmax, sigmay, sigmaz
+from fp_qsim import sigmax, sigmay, sigmaz, matrix_product
 import numpy as np
 
 # Test the hello function:
@@ -26,3 +26,11 @@ if np.allclose(left_side, right_side):
 	print('The equation sxsy = isz holds.')
 else:
 	print('The equation sxsy = isz does NOT hold.')
+
+
+
+A = np.array([[1, 2], [3, 4]])
+B = np.array([[2, 0], [1, 2]])
+C = np.array([[1,1], [0,1]])
+
+print(matrix_product([A, B, C]))
