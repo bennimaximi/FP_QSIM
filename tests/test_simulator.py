@@ -1,6 +1,7 @@
 # pytest code for simulator.py
 # import pytest
-from qiskit import QuantumCircuit
+from qiskit.circuit.library import QFTGate
+from qiskit import QuantumCircuit, transpile
 from fp_qsim.simulator import MockSimulator
 from qiskit_aer import AerSimulator
 import numpy as np
@@ -71,6 +72,24 @@ def test_single_qubit_gates() -> None:
 	ref_result = ref_sim.run(qc).result()
 	mock_result = mock_sim.run(qc, shots=1024)
 
+	ref_statevector = ref_result.get_statevector()
+	mock_statevector = mock_result.get_statevector()  # type: ignore
+
+	assert np.allclose(ref_statevector, mock_statevector)
+
+
+def test_qft() -> None:
+	"""Test the Quantum Fourier Transform on 3 qubits."""
+	qft_circ = QuantumCircuit(5)
+	qft_circ.x(4)
+	qft_circ.append(QFTGate(5), range(5))
+	qft_circ.save_statevector()  # type: ignore
+	qft_circ.measure_all()
+	ref_sim = reference_simulator()
+	mock_sim = mock_simulator()
+	compiled_circuit = transpile(qft_circ, ref_sim)
+	ref_result = ref_sim.run(compiled_circuit).result()
+	mock_result = mock_sim.run(compiled_circuit, shots=1024)
 	ref_statevector = ref_result.get_statevector()
 	mock_statevector = mock_result.get_statevector()  # type: ignore
 
