@@ -40,3 +40,6 @@ class CustomSimulator(AerSimulator):
 			for i, q_idx in enumerate(qubits):
 				output_indices[q_idx] = gate_out[i]
 		return 0
+
+
+# def apply_u_on_state(state: np.ndarray, u: np.ndarray, acting_on: list) -> None:
