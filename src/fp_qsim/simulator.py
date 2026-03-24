@@ -10,6 +10,6 @@ class MockSimulator(AerSimulator):
 		super().__init__()
 		self._statevector_simulator = AerSimulator(method='statevector')
 
-	def run(self, circuits: QuantumCircuit, shots: int) -> object:
+	def run(self, circuits: QuantumCircuit, shots: int) -> object:  # ty:ignore[invalid-method-override]
 		result = self._statevector_simulator.run(circuits, shots=shots).result()
 		return result
