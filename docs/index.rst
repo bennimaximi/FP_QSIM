@@ -12,6 +12,19 @@ This project provides custom quantum circuit simulation tools and related
 APIs. The documentation includes installation instructions and an API
 reference for the available classes and functions.
 
+.. raw:: html
+
+    <section class="doc-hero">
+       <p class="doc-hero-kicker">Quantum Circuit Simulation Toolkit</p>
+       <h2 class="doc-hero-title">Build. Inspect. Benchmark.</h2>
+       <p class="doc-hero-subtitle">FP-QSIM combines custom simulators, reproducible benchmarks, and notebook-first walkthroughs in one place.</p>
+       <div class="doc-pill-row">
+          <span class="doc-pill">Statevector Focus</span>
+          <span class="doc-pill">Benchmark Ready</span>
+          <span class="doc-pill">Notebook Guided</span>
+       </div>
+    </section>
+
 Explore the docs
 ----------------
 
@@ -21,18 +34,22 @@ Explore the docs
        <a class="doc-card" href="installation.html">
           <span class="doc-card-title">Installation</span>
           <span class="doc-card-text">Set up dependencies and your local environment quickly.</span>
+          <span class="doc-card-meta">Start here</span>
        </a>
        <a class="doc-card" href="api.html">
           <span class="doc-card-title">API Reference</span>
           <span class="doc-card-text">Browse classes and functions for simulator components.</span>
+          <span class="doc-card-meta">Developer docs</span>
        </a>
        <a class="doc-card" href="notebooks.html">
           <span class="doc-card-title">Notebook Examples</span>
           <span class="doc-card-text">Open interactive quickstarts and Bell-state walkthroughs.</span>
+          <span class="doc-card-meta">Hands-on demos</span>
        </a>
        <a class="doc-card" href="benchmark.html">
           <span class="doc-card-title">Benchmark Results</span>
           <span class="doc-card-text">Inspect runtime scaling and custom-versus-Aer ratios.</span>
+          <span class="doc-card-meta">Performance insights</span>
        </a>
     </div>
 

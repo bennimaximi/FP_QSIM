@@ -8,19 +8,21 @@ from qiskit.quantum_info import Operator
 
 @dataclass
 class MockSimulator(AerSimulator):
-    """A simple wrapper around AerSimulator"""
+    """Wrapper around AerSimulator configured for statevector results."""
 
     def __init__(self) -> None:
         super().__init__()
         self._statevector_simulator = AerSimulator(method="statevector")
 
     def run(self, circuits: QuantumCircuit, shots: int) -> object:  # ty:ignore[invalid-method-override]
-        """Run the circuit and return the result.
+        """Execute the circuit and return the Qiskit result object.
+
         Args:
             circuits (QuantumCircuit): The quantum circuit to execute.
             shots (int): The number of shots for the simulation.
+
         Returns:
-            object: The standard Qiskit Result object containing the simulation data.
+            object: Qiskit result object containing simulation data.
         """
         result = self._statevector_simulator.run(circuits, shots=shots).result()
         return result
@@ -28,23 +30,23 @@ class MockSimulator(AerSimulator):
 
 @dataclass
 class CustomSimulatorGeneral:
-    """A general-purpose custom statevector simulator using tensor contraction.
+    """General-purpose statevector simulator based on tensor contraction.
 
-    This simulator initializes a quantum state as an n-dimensional numpy tensor
-        and applies quantum gates by contracting the state tensor with the gate
-    unitary matrices using numpy.einsum.
+    The simulator initializes an n-dimensional state tensor and applies each gate
+    by contracting the state tensor with the corresponding unitary using
+    ``numpy.einsum``.
     """
 
     def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:
-        """Apply each gate tensor to the state tensor using numpy.einsum.
+        """Simulate a circuit by applying gate tensors via ``numpy.einsum``.
 
         Args:
             circuit (QuantumCircuit): The quantum circuit to simulate.
-            shots (int): Number of shots. Defaults to 1024.
-                (Note: currently unused in this deterministic statevector implementation).
+            shots (int): Number of shots. Defaults to 1024. This value is currently
+                unused because this simulator computes a deterministic statevector.
 
         Returns:
-            np.ndarray: A flattened 1D numpy array representing the final complex statevector.
+            np.ndarray: Flattened complex statevector.
         """
         n_qubits = circuit.num_qubits
 
@@ -94,16 +96,14 @@ class CustomSimulatorGeneral:
 
 @dataclass
 class CustomSimulatorManual:
-    """A manual custom simulator optimized for specific basis gates.
+    """Manual simulator optimized for circuits in ``['u', 'cx']`` basis.
 
-    This simulator applies gates to an n-dimensional state tensor. It handles general
-    unitaries via numpy.einsum and includes a hardcoded method
-    for applying CNOT (CX) gates via amplitude swapping. Ideal for circuits
-    transpiled to a ['u', 'cx'] basis.
+    It applies single-qubit unitaries with ``numpy.einsum`` and applies CX gates
+    with direct amplitude swaps for performance and simplicity.
     """
 
     def apply_unitary(self, state: np.ndarray, gate_tensor: np.ndarray, qubits: list[int]) -> np.ndarray:
-        """Applies a general unitary gate to the specified qubits on the state tensor.
+        """Apply a gate unitary to selected qubits on the state tensor.
 
         Args:
             state (np.ndarray): The current n-dimensional state tensor.
@@ -111,7 +111,7 @@ class CustomSimulatorManual:
             qubits (list[int]): The indices of the qubits the gate acts upon.
 
         Returns:
-            np.ndarray: The updated state tensor after tensor contraction.
+            np.ndarray: Updated state tensor.
         """
         n_qubits = state.ndim
         state_axes = list(range(n_qubits))[::-1]
@@ -132,9 +132,9 @@ class CustomSimulatorManual:
         )
 
     def apply_cx(self, state: np.ndarray, control: int, target: int) -> np.ndarray:
-        """Apply CX by swapping amplitudes where control=1 and target flips 0->1.
+        """Apply a CX gate through direct amplitude swapping.
 
-                This method avoids matrix multiplication, relying instead on bitwise operations
+        This method avoids matrix multiplication, relying instead on bitwise operations
         to directly swap the relevant amplitudes in the flattened state array.
 
         Args:
@@ -143,7 +143,7 @@ class CustomSimulatorManual:
             target (int): The index of the target qubit.
 
         Returns:
-            np.ndarray: The updated n-dimensional state tensor after applying the CX gate.
+            np.ndarray: Updated n-dimensional state tensor after CX.
         """
         n_qubits = state.ndim
         flat = state.reshape(-1).copy()
@@ -157,17 +157,17 @@ class CustomSimulatorManual:
         return flat.reshape([2] * n_qubits)
 
     def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:
-        """Apply each gate tensor to the state tensor.
+        """Simulate a circuit with manual ``u`` and ``cx`` gate handling.
 
-                This method expects the circuit to ideally be composed of 'u' and 'cx' gates.
-                Non-unitary instructions are ignored.
+        This method expects the circuit to ideally be composed of 'u' and 'cx' gates.
+        Non-unitary instructions are ignored.
 
         Args:
             circuit (QuantumCircuit): The quantum circuit to simulate.
             shots (int, optional): Number of shots. Defaults to 1024.
 
         Returns:
-            np.ndarray: A flattened 1D numpy array representing the final complex statevector.
+            np.ndarray: Flattened complex statevector.
         """
         # circuit = transpile(circuit, basis_gates=['u', 'cx'])
         n_qubits = circuit.num_qubits
