@@ -12,10 +12,12 @@ This notebook builds a Bell circuit, runs your custom simulator, compares agains
 	:maxdepth: 1
 
 	notebooks/bell_demo
+	notebooks/simulator_quickstart
 
 How to run locally
 ------------------
 
 1. Start Jupyter Lab from the project root.
 2. Open the notebook at docs/notebooks/bell_demo.ipynb.
-3. Run all cells.
+3. Open docs/notebooks/simulator_quickstart.ipynb for the quickstart workflow.
+4. Run all cells.
