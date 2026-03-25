@@ -1,5 +1,5 @@
 # mocked simulator for testing purposes
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
 from dataclasses import dataclass
 import numpy as np
