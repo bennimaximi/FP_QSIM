@@ -1,6 +1,7 @@
 # pytest code for simulator.py
-# import pytest
+import pytest
 # import glob
+from typing import Any
 from qiskit.circuit.library import QFTGate
 from qiskit import QuantumCircuit, transpile
 from fp_qsim.simulator import CustomSimulatorManual
@@ -116,3 +117,32 @@ def test_random_circuit() -> None:
 	custom_statevector = custom_result  # .get_statevector()
 	global_phase = ref_statevector[0] / custom_statevector[0]
 	assert np.allclose(ref_statevector, custom_statevector * global_phase)
+
+
+@pytest.mark.benchmark(group='simulator-runtime')
+@pytest.mark.parametrize('n_qubits', range(5, 13))
+def test_benchmark_custom_simulator(benchmark: Any, n_qubits: int) -> None:
+	"""Benchmark custom simulator runtime from 5 to 12 qubits."""
+	depth = 2 * n_qubits
+	custom_sim = custom_simulator()
+	qc = random_circuit(n_qubits, depth, measure=False, seed=42)
+	circuit_ucx = transpile(qc, basis_gates=['u', 'cx'])
+
+	benchmark.extra_info['qubits'] = n_qubits
+	benchmark.extra_info['simulator'] = 'custom'
+	benchmark(lambda: custom_sim.run(circuit_ucx, shots=1024))
+
+
+@pytest.mark.benchmark(group='simulator-runtime')
+@pytest.mark.parametrize('n_qubits', range(5, 13))
+def test_benchmark_aer_simulator(benchmark: Any, n_qubits: int) -> None:
+	"""Benchmark Aer simulator runtime from 5 to 12 qubits."""
+	depth = 2 * n_qubits
+	ref_sim = reference_simulator()
+	qc = random_circuit(n_qubits, depth, measure=False, seed=42)
+	circuit_ucx = transpile(qc, basis_gates=['u', 'cx'])
+	compiled_circuit = transpile(circuit_ucx, ref_sim)
+
+	benchmark.extra_info['qubits'] = n_qubits
+	benchmark.extra_info['simulator'] = 'aer'
+	benchmark(lambda: ref_sim.run(compiled_circuit, shots=1024).result())
