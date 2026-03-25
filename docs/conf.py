@@ -20,10 +20,10 @@ author = "Grasselt, Haug"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.autosummary", "sphinx.ext.autodoc", "sphinx.ext.napoleon", "myst_nb"]
+extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'myst_nb']
 
 autosummary_generate = True
-nb_execution_mode = "off"
+nb_execution_mode = 'off'
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
@@ -34,3 +34,4 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+html_css_files = ["cards.css"]
