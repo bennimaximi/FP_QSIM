@@ -27,7 +27,7 @@ class MockSimulator(AerSimulator):
 
 
 @dataclass
-class CustomSimulatorGeneral:
+class CustomSimulatorGeneral():
     """A general-purpose custom statevector simulator using tensor contraction.
 
     This simulator initializes a quantum state as an n-dimensional numpy tensor
@@ -93,7 +93,7 @@ class CustomSimulatorGeneral:
 
 
 @dataclass
-class CustomSimulatorManual:
+class CustomSimulatorManual():
     """A manual custom simulator optimized for specific basis gates.
 
     This simulator applies gates to an n-dimensional state tensor. It handles general

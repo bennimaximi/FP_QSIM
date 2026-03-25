@@ -15,7 +15,7 @@ author = 'Grasselt, Haug'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autosummary']
+extensions = ['sphinx.ext.autosummary', "sphinx.ext.autodoc", "sphinx.ext.napoleon"]
 
 autosummary_generate = True
 
