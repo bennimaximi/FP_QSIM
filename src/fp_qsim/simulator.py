@@ -18,7 +18,7 @@ class MockSimulator(AerSimulator):
 
 
 @dataclass
-class CustomSimulatorGeneral():
+class CustomSimulatorGeneral:
 	def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:
 		"""Apply each gate tensor to the state tensor using numpy.einsum."""
 		n_qubits = circuit.num_qubits
@@ -31,7 +31,14 @@ class CustomSimulatorGeneral():
 			gate = instruction.operation
 			qubits = [circuit.find_bit(q).index for q in instruction.qubits][::-1]
 			n_gate_qubits = len(qubits)
-			if gate.name in ['measure', 'barrier', 'reset', 'snapshot', 'save_statevector', 'load_statevector']:
+			if gate.name in [
+				'measure',
+				'barrier',
+				'reset',
+				'snapshot',
+				'save_statevector',
+				'load_statevector',
+			]:
 				continue
 			# Gate tensor has indices: [out_0, ..., out_k-1, in_0, ..., in_k-1].
 			gate_tensor = Operator(gate).data.reshape([2] * (2 * n_gate_qubits))
@@ -60,11 +67,11 @@ class CustomSimulatorGeneral():
 		return state.reshape(-1)
 
 
-
 @dataclass
-class CustomSimulatorManual():
-
-	def apply_unitary(self, state: np.ndarray, gate_tensor: np.ndarray, qubits: list[int]) -> np.ndarray:
+class CustomSimulatorManual:
+	def apply_unitary(
+		self, state: np.ndarray, gate_tensor: np.ndarray, qubits: list[int]
+	) -> np.ndarray:
 		n_qubits = state.ndim
 		state_axes = list(range(n_qubits))[::-1]
 		qubit_axes = list(qubits)
@@ -98,7 +105,7 @@ class CustomSimulatorManual():
 
 	def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:
 		"""Apply each gate tensor to the state tensor."""
-		circuit = transpile(circuit, basis_gates=['u', 'cx'])
+		# circuit = transpile(circuit, basis_gates=['u', 'cx'])
 		n_qubits = circuit.num_qubits
 
 		# Tensor axes are ordered as [q_{n-1}, ..., q_0] so flattening matches Qiskit's basis order.
@@ -108,7 +115,14 @@ class CustomSimulatorManual():
 		for instruction in circuit.data:
 			gate = instruction.operation
 			qubits = [circuit.find_bit(q).index for q in instruction.qubits]
-			if gate.name in ['measure', 'barrier', 'reset', 'snapshot', 'save_statevector', 'load_statevector']:
+			if gate.name in [
+				'measure',
+				'barrier',
+				'reset',
+				'snapshot',
+				'save_statevector',
+				'load_statevector',
+			]:
 				continue
 			elif gate.name == 'u':
 				n_gate_qubits = len(qubits)
