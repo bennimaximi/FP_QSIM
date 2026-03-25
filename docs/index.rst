@@ -19,3 +19,4 @@ reference for the available classes and functions.
 
    installation.rst
    api.rst
+   simulator_quickstart.ipynb

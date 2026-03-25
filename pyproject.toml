@@ -12,6 +12,7 @@ dependencies = [
     "matplotlib>=3.10.8",
     "mypy>=1.19.1",
     "numpy>=2.4.3",
+    "pandoc>=2.4",
     "pre-commit>=4.5.1",
     "pylatexenc>=2.10",
     "pytest>=9.0.2",
@@ -71,6 +72,7 @@ warn_unused_configs = true
 
 [dependency-groups]
 dev = [
+    "nbsphinx>=0.9.8",
     "pytest-benchmark>=5.1.0",
     "sphinx>=9.0.4",
     "sphinx-rtd-theme>=3.1.0",
