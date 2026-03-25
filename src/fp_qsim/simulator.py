@@ -18,12 +18,12 @@ class MockSimulator(AerSimulator):
 
 
 @dataclass
-class CustomSimulator():
-	def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:  
+class CustomSimulator:
+	def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:
 		"""Apply each gate tensor to the state tensor using numpy.einsum."""
 		n_qubits = circuit.num_qubits
 
-		# Tensor axes are ordered as [q_{n-1}, ..., q_0] 
+		# Tensor axes are ordered as [q_{n-1}, ..., q_0]
 		state = np.zeros([2] * n_qubits, dtype=complex)
 		state[(0,) * n_qubits] = 1.0
 
@@ -55,5 +55,3 @@ class CustomSimulator():
 			)
 
 		return state.reshape(2**n_qubits)
-
-
