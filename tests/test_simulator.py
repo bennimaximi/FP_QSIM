@@ -3,7 +3,7 @@
 # import glob
 from qiskit.circuit.library import QFTGate
 from qiskit import QuantumCircuit, transpile
-from fp_qsim.simulator import CustomSimulator
+from fp_qsim.simulator import CustomSimulatorGeneral
 from qiskit_aer import AerSimulator
 import numpy as np
 from qiskit.circuit.random import random_circuit
@@ -13,8 +13,8 @@ def reference_simulator() -> AerSimulator:
 	return AerSimulator(method='statevector')
 
 
-def custom_simulator() -> CustomSimulator:
-	return CustomSimulator()
+def custom_simulator() -> CustomSimulatorGeneral:
+	return CustomSimulatorGeneral()
 
 
 def test_bell_state() -> None:
