@@ -31,7 +31,8 @@ class CustomSimulatorGeneral():
 			gate = instruction.operation
 			qubits = [circuit.find_bit(q).index for q in instruction.qubits][::-1]
 			n_gate_qubits = len(qubits)
-
+			if gate.name in ['measure', 'barrier', 'reset', 'snapshot', 'save_statevector', 'load_statevector']:
+				continue
 			# Gate tensor has indices: [out_0, ..., out_k-1, in_0, ..., in_k-1].
 			gate_tensor = Operator(gate).data.reshape([2] * (2 * n_gate_qubits))
 			# print(Operator(gate).data)
