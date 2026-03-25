@@ -3,7 +3,7 @@
 # import glob
 from qiskit.circuit.library import QFTGate
 from qiskit import QuantumCircuit, transpile
-from fp_qsim.simulator import CustomSimulatorGeneral, CustomSimulatorManual
+from fp_qsim.simulator import CustomSimulatorManual
 from qiskit_aer import AerSimulator
 import numpy as np
 from qiskit.circuit.random import random_circuit
@@ -111,7 +111,6 @@ def test_random_circuit() -> None:
 	ref_sim = reference_simulator()
 	custom_sim = custom_simulator()
 	compiled_circuit = transpile(circuit_ucx, ref_sim)
-	ref_result = ref_sim.run(compiled_circuit).result()
 	custom_result = custom_sim.run(circuit_ucx, shots=1024)
 	ref_statevector = mocked_statevector(compiled_circuit)
 	custom_statevector = custom_result  # .get_statevector()
