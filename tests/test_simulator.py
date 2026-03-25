@@ -2,7 +2,7 @@
 # import pytest
 from qiskit.circuit.library import QFTGate
 from qiskit import QuantumCircuit, transpile
-from fp_qsim.simulator import MockSimulator
+from fp_qsim.simulator import CustomSimulatorGeneral
 from qiskit_aer import AerSimulator
 import numpy as np
 
@@ -11,8 +11,8 @@ def reference_simulator() -> AerSimulator:
 	return AerSimulator(method='statevector')
 
 
-def custom_simulator() -> MockSimulator:
-	return MockSimulator()
+def custom_simulator() -> CustomSimulatorGeneral:
+	return CustomSimulatorGeneral()
 
 
 def test_bell_state() -> None:
