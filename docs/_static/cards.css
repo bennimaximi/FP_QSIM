@@ -1,0 +1,57 @@
+:root {
+  --card-bg: #ffffff;
+  --card-border: #d7dee6;
+  --card-accent: #0b7285;
+  --card-accent-soft: #e6f7fb;
+  --card-title: #113246;
+  --card-text: #385269;
+  --card-shadow: 0 6px 18px rgba(17, 50, 70, 0.08);
+  --card-shadow-hover: 0 14px 30px rgba(11, 114, 133, 0.18);
+}
+
+.doc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.2rem 0 1.8rem;
+}
+
+.doc-card {
+  display: block;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: linear-gradient(165deg, var(--card-bg) 0%, var(--card-accent-soft) 100%);
+  text-decoration: none !important;
+  box-shadow: var(--card-shadow);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.doc-card:hover,
+.doc-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--card-accent);
+  box-shadow: var(--card-shadow-hover);
+  outline: none;
+}
+
+.doc-card-title {
+  display: block;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--card-title);
+  margin-bottom: 0.35rem;
+}
+
+.doc-card-text {
+  display: block;
+  color: var(--card-text);
+  line-height: 1.35;
+  font-size: 0.94rem;
+}
+
+@media (max-width: 700px) {
+  .doc-card-grid {
+    gap: 0.75rem;
+  }
+}
