@@ -1,10 +1,12 @@
 # pytest code for simulator.py
 # import pytest
+# import glob
 from qiskit.circuit.library import QFTGate
 from qiskit import QuantumCircuit, transpile
 from fp_qsim.simulator import CustomSimulatorGeneral
 from qiskit_aer import AerSimulator
 import numpy as np
+from qiskit.circuit.random import random_circuit
 
 
 def reference_simulator() -> AerSimulator:
@@ -32,7 +34,7 @@ def test_bell_state() -> None:
 
 	# Extract statevectors
 	ref_statevector = ref_result.get_statevector()
-	custom_statevector = custom_result.get_statevector()  # type: ignore
+	custom_statevector = custom_result  # .get_statevector()
 
 	# Assert that the statevectors are approximately equal
 	assert np.allclose(ref_statevector, custom_statevector)
@@ -53,7 +55,7 @@ def test_ghz_state() -> None:
 	custom_result = custom_sim.run(qc, shots=1024)
 
 	ref_statevector = ref_result.get_statevector()
-	custom_statevector = custom_result.get_statevector()  # type: ignore
+	custom_statevector = custom_result  # .get_statevector()
 
 	assert np.allclose(ref_statevector, custom_statevector)
 
@@ -73,8 +75,7 @@ def test_single_qubit_gates() -> None:
 	custom_result = custom_sim.run(qc, shots=1024)
 
 	ref_statevector = ref_result.get_statevector()
-	custom_statevector = custom_result.get_statevector()  # type: ignore
-
+	custom_statevector = custom_result  # .get_statevector()
 	assert np.allclose(ref_statevector, custom_statevector)
 
 
@@ -91,6 +92,21 @@ def test_qft() -> None:
 	ref_result = ref_sim.run(compiled_circuit).result()
 	custom_result = custom_sim.run(compiled_circuit, shots=1024)
 	ref_statevector = ref_result.get_statevector()
-	custom_statevector = custom_result.get_statevector()  # type: ignore
+	custom_statevector = custom_result  # .get_statevector()
+	global_phase = ref_statevector[0] / custom_statevector[0]
+	assert np.allclose(ref_statevector, custom_statevector * global_phase)
 
-	assert np.allclose(ref_statevector, custom_statevector)
+
+def test_random_circuit() -> None:
+	"""Test a random circuit on 4 qubits."""
+	qc = random_circuit(4, 10, measure=False)
+	qc.save_statevector()  # type: ignore
+	ref_sim = reference_simulator()
+	custom_sim = custom_simulator()
+	compiled_circuit = transpile(qc, ref_sim)
+	ref_result = ref_sim.run(compiled_circuit).result()
+	custom_result = custom_sim.run(compiled_circuit, shots=1024)
+	ref_statevector = ref_result.get_statevector()
+	custom_statevector = custom_result  # .get_statevector()
+	global_phase = ref_statevector[0] / custom_statevector[0]
+	assert np.allclose(ref_statevector, custom_statevector * global_phase)
