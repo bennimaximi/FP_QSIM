@@ -142,7 +142,7 @@ def test_benchmark_custom_simulator(benchmark: Any, n_qubits: int) -> None:
 	benchmark.extra_info['simulator'] = 'custom'
 	benchmark(lambda: custom_sim.run(circuit_ucx, shots=1024))'''
 
-'''
+
 @pytest.mark.benchmark(group='simulator-runtime')
 @pytest.mark.parametrize('n_qubits', range(5, 13))
 def test_benchmark_aer_simulator(benchmark: Any, n_qubits: int) -> None:
@@ -155,4 +155,4 @@ def test_benchmark_aer_simulator(benchmark: Any, n_qubits: int) -> None:
 
 	benchmark.extra_info['qubits'] = n_qubits
 	benchmark.extra_info['simulator'] = 'aer'
-	benchmark(lambda: ref_sim.run(compiled_circuit, shots=1024).result())'''
+	benchmark(lambda: ref_sim.run(compiled_circuit, shots=1024).result())
