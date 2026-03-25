@@ -6,10 +6,11 @@
 FP-QSIM documentation
 =====================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+Welcome to the documentation for ``FP-QSIM``.
 
+This project provides custom quantum circuit simulation tools and related
+APIs. The documentation includes installation instructions and an API
+reference for the available classes and functions.
 
 .. toctree::
    :maxdepth: 2
