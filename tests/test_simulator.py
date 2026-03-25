@@ -11,7 +11,7 @@ def reference_simulator() -> AerSimulator:
 	return AerSimulator(method='statevector')
 
 
-def mock_simulator() -> MockSimulator:
+def custom_simulator() -> MockSimulator:
 	return MockSimulator()
 
 
@@ -25,17 +25,17 @@ def test_bell_state() -> None:
 
 	# Get results from both simulators
 	ref_sim = reference_simulator()
-	mock_sim = mock_simulator()
+	custom_sim = custom_simulator()
 
 	ref_result = ref_sim.run(qc).result()
-	mock_result = mock_sim.run(qc, shots=1024)
+	custom_result = custom_sim.run(qc, shots=1024)
 
 	# Extract statevectors
 	ref_statevector = ref_result.get_statevector()
-	mock_statevector = mock_result.get_statevector()  # type: ignore
+	custom_statevector = custom_result.get_statevector()  # type: ignore
 
 	# Assert that the statevectors are approximately equal
-	assert np.allclose(ref_statevector, mock_statevector)
+	assert np.allclose(ref_statevector, custom_statevector)
 
 
 def test_ghz_state() -> None:
@@ -47,15 +47,15 @@ def test_ghz_state() -> None:
 	qc.save_statevector()  # type: ignore
 
 	ref_sim = reference_simulator()
-	mock_sim = mock_simulator()
+	custom_sim = custom_simulator()
 
 	ref_result = ref_sim.run(qc).result()
-	mock_result = mock_sim.run(qc, shots=1024)
+	custom_result = custom_sim.run(qc, shots=1024)
 
 	ref_statevector = ref_result.get_statevector()
-	mock_statevector = mock_result.get_statevector()  # type: ignore
+	custom_statevector = custom_result.get_statevector()  # type: ignore
 
-	assert np.allclose(ref_statevector, mock_statevector)
+	assert np.allclose(ref_statevector, custom_statevector)
 
 
 def test_single_qubit_gates() -> None:
@@ -67,15 +67,15 @@ def test_single_qubit_gates() -> None:
 	qc.save_statevector()  # type: ignore
 
 	ref_sim = reference_simulator()
-	mock_sim = mock_simulator()
+	custom_sim = custom_simulator()
 
 	ref_result = ref_sim.run(qc).result()
-	mock_result = mock_sim.run(qc, shots=1024)
+	custom_result = custom_sim.run(qc, shots=1024)
 
 	ref_statevector = ref_result.get_statevector()
-	mock_statevector = mock_result.get_statevector()  # type: ignore
+	custom_statevector = custom_result.get_statevector()  # type: ignore
 
-	assert np.allclose(ref_statevector, mock_statevector)
+	assert np.allclose(ref_statevector, custom_statevector)
 
 
 def test_qft() -> None:
@@ -86,11 +86,11 @@ def test_qft() -> None:
 	qft_circ.save_statevector()  # type: ignore
 	qft_circ.measure_all()
 	ref_sim = reference_simulator()
-	mock_sim = mock_simulator()
+	custom_sim = custom_simulator()
 	compiled_circuit = transpile(qft_circ, ref_sim)
 	ref_result = ref_sim.run(compiled_circuit).result()
-	mock_result = mock_sim.run(compiled_circuit, shots=1024)
+	custom_result = custom_sim.run(compiled_circuit, shots=1024)
 	ref_statevector = ref_result.get_statevector()
-	mock_statevector = mock_result.get_statevector()  # type: ignore
+	custom_statevector = custom_result.get_statevector()  # type: ignore
 
-	assert np.allclose(ref_statevector, mock_statevector)
+	assert np.allclose(ref_statevector, custom_statevector)
