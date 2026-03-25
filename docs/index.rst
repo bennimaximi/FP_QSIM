@@ -20,3 +20,4 @@ reference for the available classes and functions.
    installation.rst
    api.rst
    benchmark.rst
+   notebooks.rst
