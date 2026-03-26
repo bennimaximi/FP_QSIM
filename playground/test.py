@@ -1,11 +1,5 @@
-from fp_qsim import hello
 from fp_qsim.pauli import sigmax, sigmay, sigmaz
 import numpy as np
-
-# Test the hello function:
-
-output = hello()
-print(output)
 
 # Test the Pauli matrices:
 

@@ -15,11 +15,11 @@ def _apply_cx_python_inplace(flat: np.ndarray, control: int, target: int) -> Non
         return
 
     n_states = flat.size
-    lower_block = 2 ** target
+    lower_block = 2**target
     pair_block = 2 ** (target + 1)
 
     if control < target:
-        control_block = 2 ** control
+        control_block = 2**control
         lower_stride = 2 ** (control + 1)
 
         for upper_base in range(0, n_states, pair_block):
@@ -61,7 +61,7 @@ def _apply_u1_python_inplace(
     Basis indexing is little-endian: flat index = sum(bit_q * 2**q).
     """
     n_states = flat.size
-    lower_block = 2 ** target
+    lower_block = 2**target
     pair_block = 2 ** (target + 1)
 
     for upper_base in range(0, n_states, pair_block):
@@ -81,11 +81,11 @@ def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None
         return
 
     n_states = flat.size
-    lower_block = 2 ** target
+    lower_block = 2**target
     pair_block = 2 ** (target + 1)
 
     if control < target:
-        control_block = 2 ** control
+        control_block = 2**control
         lower_stride = 2 ** (control + 1)
 
         for upper_base in range(0, n_states, pair_block):
@@ -125,7 +125,7 @@ def _apply_u1_numba_inplace(
 ) -> None:
     """Numba single-qubit kernel with explicit target-bit pair traversal."""
     n_states = flat.size
-    lower_block = 2 ** target
+    lower_block = 2**target
     pair_block = 2 ** (target + 1)
 
     for upper_base in range(0, n_states, pair_block):
