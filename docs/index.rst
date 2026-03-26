@@ -41,7 +41,7 @@ Explore the docs
           <span class="doc-card-text">Set up dependencies and your local environment quickly.</span>
           <span class="doc-card-meta">Start here</span>
        </a>
-       <a class="doc-card" href="api.html">
+       <a class="doc-card js-api-reference-card" href="api.html">
           <span class="doc-card-title">API Reference</span>
           <span class="doc-card-text">Browse classes and functions for simulator components.</span>
           <span class="doc-card-meta">Developer docs</span>
@@ -55,6 +55,11 @@ Explore the docs
           <span class="doc-card-title">Benchmark Results</span>
           <span class="doc-card-text">Inspect runtime scaling and custom-versus-Aer ratios.</span>
           <span class="doc-card-meta">Performance insights</span>
+       </a>
+       <a class="doc-card" href="explanation.html">
+          <span class="doc-card-title">Design Explanation</span>
+          <span class="doc-card-text">Understand why FP-QSIM combines general and optimized simulator paths.</span>
+          <span class="doc-card-meta">Conceptual background</span>
        </a>
     </div>
 
@@ -84,6 +89,7 @@ Fun Buttons
 
    developer_guide.rst
    installation.rst
+   explanation.rst
    api.rst
    benchmark.rst
    notebooks.rst

@@ -4,6 +4,9 @@ Installation
 This page explains how to install `fp-qsim` for development and how to
 verify that the installation works.
 
+For conceptual background on design choices and architecture trade-offs, see
+:doc:`explanation`.
+
 Prerequisites
 -------------
 
