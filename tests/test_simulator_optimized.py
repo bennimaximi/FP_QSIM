@@ -1,8 +1,10 @@
+"""Tests and benchmarks for optimized simulator parity and performance."""
+
+import numpy as np
+import pytest
+from pytest_benchmark.fixture import BenchmarkFixture
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.random import random_circuit
-import pytest
-from typing import Any
-import numpy as np
 
 from fp_qsim.simulator import CustomSimulatorManual
 from fp_qsim.simulator_optimized import CustomSimulatorManualOptimized
@@ -18,6 +20,7 @@ def align_global_phase(reference: np.ndarray, candidate: np.ndarray) -> np.ndarr
 
     Returns:
         Phase-aligned candidate statevector.
+
     """
     anchor = int(np.argmax(np.abs(candidate)))
     if np.isclose(candidate[anchor], 0.0):
@@ -34,6 +37,7 @@ def make_cx_heavy_circuit(n_qubits: int, layers: int) -> QuantumCircuit:
 
     Returns:
         Transpiled circuit in the ["u", "cx"] basis.
+
     """
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -53,6 +57,7 @@ def test_optimized_matches_reference_bell() -> None:
 
     Returns:
         None.
+
     """
     qc = QuantumCircuit(2)
     qc.h(0)
@@ -72,6 +77,7 @@ def test_optimized_numba_matches_reference_random() -> None:
 
     Returns:
         None.
+
     """
     qc = random_circuit(4, 10, measure=False, seed=42)
     circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
@@ -89,6 +95,7 @@ def test_python_and_numba_backends_match() -> None:
 
     Returns:
         None.
+
     """
     qc = random_circuit(5, 14, measure=False, seed=123)
     circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
@@ -105,6 +112,7 @@ def test_run_batch_equivalent_to_serial() -> None:
 
     Returns:
         None.
+
     """
     circuits = [
         transpile(random_circuit(4, 8, measure=False, seed=seed), basis_gates=["u", "cx"]) for seed in [11, 22, 33]
@@ -115,14 +123,14 @@ def test_run_batch_equivalent_to_serial() -> None:
     batch = sim.run_batch(circuits, max_workers=2)
 
     assert len(batch) == len(serial)
-    for expected, candidate in zip(serial, batch):
+    for expected, candidate in zip(serial, batch, strict=False):
         aligned = align_global_phase(expected, candidate)
         assert np.allclose(expected, aligned)
 
 
 @pytest.mark.benchmark(group="cx-heavy-runtime")
 @pytest.mark.parametrize("n_qubits", range(5, 17))
-def test_benchmark_cx_heavy_baseline_manual(benchmark: Any, n_qubits: int) -> None:
+def test_benchmark_cx_heavy_baseline_manual(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmark CX-heavy runtime for the manual baseline simulator.
 
     Args:
@@ -131,6 +139,7 @@ def test_benchmark_cx_heavy_baseline_manual(benchmark: Any, n_qubits: int) -> No
 
     Returns:
         None.
+
     """
     circuit = make_cx_heavy_circuit(n_qubits=n_qubits, layers=4)
     simulator = CustomSimulatorManual()
@@ -142,7 +151,7 @@ def test_benchmark_cx_heavy_baseline_manual(benchmark: Any, n_qubits: int) -> No
 
 @pytest.mark.benchmark(group="cx-heavy-runtime")
 @pytest.mark.parametrize("n_qubits", range(5, 17))
-def test_benchmark_cx_heavy_optimized(benchmark: Any, n_qubits: int) -> None:
+def test_benchmark_cx_heavy_optimized(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmark CX-heavy runtime for the optimized simulator backend.
 
     Args:
@@ -151,6 +160,7 @@ def test_benchmark_cx_heavy_optimized(benchmark: Any, n_qubits: int) -> None:
 
     Returns:
         None.
+
     """
     circuit = make_cx_heavy_circuit(n_qubits=n_qubits, layers=4)
     simulator = CustomSimulatorManualOptimized(cx_backend="numba")

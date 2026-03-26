@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import matplotlib.pyplot as plt
-
 
 ROOT = Path(__file__).resolve().parent
 INPUT_JSON = ROOT / "_static" / "benchmark_results_q5_16.json"
@@ -23,6 +22,7 @@ def _load_medians_by_name(path: Path, lhs_token: str, rhs_token: str) -> tuple[d
 
     Returns:
         Two maps from qubit count to median runtime in milliseconds.
+
     """
     data = json.loads(path.read_text(encoding="utf-8"))
     lhs: dict[int, float] = {}
@@ -54,6 +54,7 @@ def _validate_qubit_range(qubits: Iterable[int]) -> None:
 
     Returns:
         None.
+
     """
     expected = set(range(5, 17))
     observed = set(qubits)
@@ -89,6 +90,7 @@ def _plot_pair(
 
     Returns:
         None.
+
     """
     fig, (ax_time, ax_ratio) = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
 
@@ -115,6 +117,7 @@ def main() -> None:
 
     Returns:
         None.
+
     """
     custom, aer = _load_medians_by_name(
         INPUT_JSON,
@@ -130,7 +133,7 @@ def main() -> None:
 
     custom_ms = [custom[q] for q in qubits]
     aer_ms = [aer[q] for q in qubits]
-    ratio = [c / a for c, a in zip(custom_ms, aer_ms)]
+    ratio = [c / a for c, a in zip(custom_ms, aer_ms, strict=False)]
 
     _plot_pair(
         qubits=qubits,
@@ -158,7 +161,7 @@ def main() -> None:
 
     baseline_ms = [baseline[q] for q in qubits_cx]
     optimized_ms = [optimized[q] for q in qubits_cx]
-    speedup = [b / o for b, o in zip(baseline_ms, optimized_ms)]
+    speedup = [b / o for b, o in zip(baseline_ms, optimized_ms, strict=False)]
 
     _plot_pair(
         qubits=qubits_cx,
