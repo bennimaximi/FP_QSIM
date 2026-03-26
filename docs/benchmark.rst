@@ -4,7 +4,10 @@ Benchmark Results
 This page compares median runtime across two benchmark groups for
 qubit counts from 5 to 16.
 
-For the simulator-runtime group, the ratio curve is defined as:
+Both benchmark paths append ``save_statevector()`` after transpilation to ensure
+the documented results represent statevector-save workflow overhead consistently.
+
+The ratio curve is defined as:
 
 custom runtime / aer runtime
 

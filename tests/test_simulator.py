@@ -191,9 +191,10 @@ def test_benchmark_custom_simulator(benchmark: Any, n_qubits: int) -> None:
     custom_sim = custom_simulator()
     qc = random_circuit(n_qubits, depth, measure=False, seed=42)
     circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
-
+    circuit_ucx.save_statevector()
     benchmark.extra_info["qubits"] = n_qubits
     benchmark.extra_info["simulator"] = "custom"
+    benchmark.extra_info["save_statevector"] = "after_transpile"
     benchmark(lambda: custom_sim.run(circuit_ucx, shots=1024))
 
 
@@ -214,7 +215,8 @@ def test_benchmark_aer_simulator(benchmark: Any, n_qubits: int) -> None:
     qc = random_circuit(n_qubits, depth, measure=False, seed=42)
     circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
     compiled_circuit = transpile(circuit_ucx, ref_sim)
-
+    compiled_circuit.save_statevector()
     benchmark.extra_info["qubits"] = n_qubits
     benchmark.extra_info["simulator"] = "aer"
+    benchmark.extra_info["save_statevector"] = "after_transpile"
     benchmark(lambda: ref_sim.run(compiled_circuit, shots=1024).result())
