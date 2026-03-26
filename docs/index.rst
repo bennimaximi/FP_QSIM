@@ -58,6 +58,24 @@ Explore the docs
        </a>
     </div>
 
+Fun Buttons
+-----------
+
+.. raw:: html
+
+    <section class="doc-fun" id="fun-zone">
+       <p class="doc-fun-kicker">Playground</p>
+       <h3 class="doc-fun-title">Push a button, get a tiny surprise</h3>
+       <p class="doc-fun-subtitle">Pure client-side, harmless, and reversible.</p>
+       <div class="doc-fun-buttons">
+          <button class="doc-fun-button" type="button" data-fun-action="theme-jump">Theme jump</button>
+          <button class="doc-fun-button" type="button" data-fun-action="shuffle-cards">Shuffle cards</button>
+          <button class="doc-fun-button" type="button" data-fun-action="launch-stars">Launch stars</button>
+          <button class="doc-fun-button" type="button" data-fun-action="show-fact">Quantum fact</button>
+       </div>
+       <p class="doc-fun-output" id="doc-fun-output">Press a button to see what happens.</p>
+    </section>
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
