@@ -176,7 +176,7 @@ def test_random_circuit() -> None:
 
 
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(4, 16))
+@pytest.mark.parametrize("n_qubits", range(5, 17))
 def test_benchmark_custom_simulator(benchmark: Any, n_qubits: int) -> None:
     """Benchmarks the runtime of the custom simulator.
 
@@ -198,7 +198,7 @@ def test_benchmark_custom_simulator(benchmark: Any, n_qubits: int) -> None:
 
 
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(4, 16))
+@pytest.mark.parametrize("n_qubits", range(5, 17))
 def test_benchmark_aer_simulator(benchmark: Any, n_qubits: int) -> None:
     """Benchmarks the runtime of the reference Qiskit Aer simulator.
 
