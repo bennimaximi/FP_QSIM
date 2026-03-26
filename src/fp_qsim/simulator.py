@@ -31,7 +31,7 @@ class CustomSimulatorGeneral:
     """A general-purpose custom statevector simulator using tensor contraction.
 
     This simulator initializes a quantum state as an n-dimensional numpy tensor
-        and applies quantum gates by contracting the state tensor with the gate
+    and applies quantum gates by contracting the state tensor with the gate
     unitary matrices using numpy.einsum.
     """
 
@@ -134,7 +134,7 @@ class CustomSimulatorManual:
     def apply_cx(self, state: np.ndarray, control: int, target: int) -> np.ndarray:
         """Apply CX by swapping amplitudes where control=1 and target flips 0->1.
 
-                This method avoids matrix multiplication, relying instead on bitwise operations
+        This method avoids matrix multiplication, relying instead on bitwise operations
         to directly swap the relevant amplitudes in the flattened state array.
 
         Args:
