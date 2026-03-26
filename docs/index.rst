@@ -61,6 +61,11 @@ Explore the docs
           <span class="doc-card-text">Inspect runtime scaling and custom-versus-Aer ratios.</span>
           <span class="doc-card-meta">Performance insights</span>
        </a>
+       <a class="doc-card" href="dino_minigame.html">
+          <span class="doc-card-title">Offline Runner Mini Game</span>
+          <span class="doc-card-text">Play a lightweight runner mini game directly inside the docs.</span>
+          <span class="doc-card-meta">Interactive example</span>
+       </a>
        <a class="doc-card" href="explanation.html">
           <span class="doc-card-title">Design Explanation</span>
           <span class="doc-card-text">Understand why FP-QSIM combines general and optimized simulator paths.</span>
@@ -98,4 +103,5 @@ Fun Buttons
    explanation.rst
    api.rst
    benchmark.rst
+   dino_minigame.rst
    notebooks.rst
