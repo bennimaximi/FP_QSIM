@@ -211,6 +211,79 @@ h3 {
   font-weight: 600;
 }
 
+.dino-game-shell {
+  border: 1px solid #b8cfdd;
+  border-radius: 14px;
+  background: linear-gradient(165deg, #ffffff 0%, #eef8ff 100%);
+  box-shadow: 0 10px 26px rgba(9, 62, 97, 0.11);
+  padding: 1rem;
+  margin: 1rem 0 1.2rem;
+}
+
+.dino-game-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.73rem;
+  color: var(--card-accent);
+  font-weight: 700;
+}
+
+.dino-game-title {
+  margin: 0.2rem 0 0.35rem;
+  color: var(--ink-900);
+}
+
+.dino-game-help {
+  margin: 0 0 0.75rem;
+  color: var(--ink-700);
+}
+
+.dino-game-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.dino-game-bar span {
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.dino-game-bar button {
+  border: 1px solid #95b9ce;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 700;
+  background: #ffffff;
+  color: var(--ink-900);
+  cursor: pointer;
+}
+
+.dino-game-bar button:hover,
+.dino-game-bar button:focus-visible {
+  border-color: var(--card-accent);
+  outline: none;
+}
+
+#dino-canvas {
+  width: 100%;
+  max-width: 760px;
+  height: auto;
+  display: block;
+  border: 1px solid #a7c2d3;
+  border-radius: 10px;
+  background: #f6fbff;
+}
+
+.dino-game-status {
+  margin: 0.65rem 0 0;
+  color: var(--ink-700);
+  font-weight: 600;
+}
+
 .doc-fun-star {
   position: absolute;
   top: 54%;
@@ -289,5 +362,9 @@ h3 {
 
   .doc-fun {
     padding: 0.9rem;
+  }
+
+  .dino-game-shell {
+    padding: 0.85rem;
   }
 }
