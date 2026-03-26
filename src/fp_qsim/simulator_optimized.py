@@ -11,19 +11,41 @@ from qiskit.quantum_info import Operator
 
 def _apply_cx_python_inplace(flat: np.ndarray, control: int, target: int) -> None:
     """Apply CX using explicit lower/upper index traversal around target."""
+    if control == target:
+        return
+
     n_states = flat.size
     lower_block = 2 ** target
     pair_block = 2 ** (target + 1)
-    control_mask = 2 ** control
 
-    for upper_base in range(0, n_states, pair_block):
+    if control < target:
+        control_block = 2 ** control
+        lower_stride = 2 ** (control + 1)
+
+        for upper_base in range(0, n_states, pair_block):
+            for lower_start in range(control_block, lower_block, lower_stride):
+                lower_end = lower_start + control_block
+                for lower in range(lower_start, lower_end):
+                    i0 = upper_base + lower
+                    i1 = i0 + lower_block
+                    temp = flat[i0]
+                    flat[i0] = flat[i1]
+                    flat[i1] = temp
+        return
+
+    upper_control_bit = 2 ** (control - target - 1)
+    upper_count = n_states // pair_block
+    for upper in range(upper_count):
+        if (upper & upper_control_bit) == 0:
+            continue
+
+        upper_base = upper * pair_block
         for lower in range(lower_block):
             i0 = upper_base + lower
             i1 = i0 + lower_block
-            if (i0 & control_mask) != 0:
-                temp = flat[i0]
-                flat[i0] = flat[i1]
-                flat[i1] = temp
+            temp = flat[i0]
+            flat[i0] = flat[i1]
+            flat[i1] = temp
 
 
 def _apply_u1_python_inplace(
@@ -55,19 +77,41 @@ def _apply_u1_python_inplace(
 @nb.njit(cache=True)  # type: ignore[misc]
 def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None:
     """Numba CX kernel with the same explicit lower/upper index traversal."""
+    if control == target:
+        return
+
     n_states = flat.size
     lower_block = 2 ** target
     pair_block = 2 ** (target + 1)
-    control_mask = 2 ** control
 
-    for upper_base in range(0, n_states, pair_block):
+    if control < target:
+        control_block = 2 ** control
+        lower_stride = 2 ** (control + 1)
+
+        for upper_base in range(0, n_states, pair_block):
+            for lower_start in range(control_block, lower_block, lower_stride):
+                lower_end = lower_start + control_block
+                for lower in range(lower_start, lower_end):
+                    i0 = upper_base + lower
+                    i1 = i0 + lower_block
+                    temp = flat[i0]
+                    flat[i0] = flat[i1]
+                    flat[i1] = temp
+        return
+
+    upper_control_bit = 2 ** (control - target - 1)
+    upper_count = n_states // pair_block
+    for upper in range(upper_count):
+        if (upper & upper_control_bit) == 0:
+            continue
+
+        upper_base = upper * pair_block
         for lower in range(lower_block):
             i0 = upper_base + lower
             i1 = i0 + lower_block
-            if (i0 & control_mask) != 0:
-                temp = flat[i0]
-                flat[i0] = flat[i1]
-                flat[i1] = temp
+            temp = flat[i0]
+            flat[i0] = flat[i1]
+            flat[i1] = temp
 
 
 @nb.njit(cache=True)  # type: ignore[misc]
@@ -175,9 +219,10 @@ class CustomSimulatorManualOptimized:
         _ = shots
         n_qubits = circuit.num_qubits
 
-        # Tensor axes are ordered as [q_{n-1}, ..., q_0] so flattening matches Qiskit's basis order.
-        state = np.zeros([2] * n_qubits, dtype=complex)
-        state[(0,) * n_qubits] = 1.0
+        # Keep a flat statevector throughout the loop to avoid repeated reshape/copy work.
+        flat = np.zeros(2**n_qubits, dtype=complex)
+        flat[0] = 1.0
+        tensor_shape = [2] * n_qubits
 
         for instruction in circuit.data:
             gate = instruction.operation
@@ -195,21 +240,44 @@ class CustomSimulatorManualOptimized:
 
             if gate.name == "u":
                 target = qubits[0]
-                gate_matrix = Operator(gate).data
-                state = self.apply_u_single_qubit(state, target, gate_matrix)
+                theta, phi, lam = gate.params
+                theta_f = float(theta)
+                phi_f = float(phi)
+                lam_f = float(lam)
+
+                cos_half = np.cos(theta_f / 2.0)
+                sin_half = np.sin(theta_f / 2.0)
+                phase_phi = np.exp(1j * phi_f)
+                phase_lam = np.exp(1j * lam_f)
+                phase_phi_lam = phase_phi * phase_lam
+
+                u00 = complex(cos_half)
+                u01 = complex(-phase_lam * sin_half)
+                u10 = complex(phase_phi * sin_half)
+                u11 = complex(phase_phi_lam * cos_half)
+
+                if self.effective_cx_backend == "numba":
+                    _apply_u1_numba_inplace(flat, target, u00, u01, u10, u11)
+                else:
+                    _apply_u1_python_inplace(flat, target, u00, u01, u10, u11)
                 continue
 
             if gate.name == "cx":
                 control, target = qubits
-                state = self.apply_cx(state, control, target)
+                if self.effective_cx_backend == "numba":
+                    _apply_cx_numba_inplace(flat, control, target)
+                else:
+                    _apply_cx_python_inplace(flat, control, target)
                 continue
 
             # Fallback for other unitary gates to keep broad compatibility.
             n_gate_qubits = len(qubits)
             gate_tensor = Operator(gate).data.reshape([2] * (2 * n_gate_qubits))
-            state = self.apply_unitary(state, gate_tensor, qubits)
+            state_tensor = flat.reshape(tensor_shape)
+            state_tensor = self.apply_unitary(state_tensor, gate_tensor, qubits)
+            flat = state_tensor.reshape(-1)
 
-        return state.reshape(-1)
+        return flat
 
     def run_batch(
         self,
