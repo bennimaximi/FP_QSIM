@@ -31,6 +31,11 @@ Explore the docs
 .. raw:: html
 
     <div class="doc-card-grid">
+       <a class="doc-card" href="developer_guide.html">
+          <span class="doc-card-title">Developer Guide</span>
+          <span class="doc-card-text">Get the full maintainer workflow: setup, testing, extension, and pitfalls.</span>
+          <span class="doc-card-meta">Contribute faster</span>
+       </a>
        <a class="doc-card" href="installation.html">
           <span class="doc-card-title">Installation</span>
           <span class="doc-card-text">Set up dependencies and your local environment quickly.</span>
@@ -58,6 +63,7 @@ Explore the docs
    :caption: Contents:
    :hidden:
 
+   developer_guide.rst
    installation.rst
    api.rst
    benchmark.rst
