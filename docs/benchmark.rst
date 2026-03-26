@@ -4,6 +4,9 @@ Benchmark Results
 This page compares median runtime of the custom simulator and Qiskit Aer for
 qubit counts from 4 to 15.
 
+Both benchmark paths append ``save_statevector()`` after transpilation to ensure
+the documented results represent statevector-save workflow overhead consistently.
+
 The ratio curve is defined as:
 
 custom runtime / aer runtime
