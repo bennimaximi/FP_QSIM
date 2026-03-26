@@ -46,16 +46,27 @@ def test_optimized_matches_reference_bell() -> None:
     assert np.allclose(reference, result)
 
 
-def test_optimized_numba_or_auto_matches_reference_random() -> None:
+def test_optimized_numba_matches_reference_random() -> None:
     qc = random_circuit(4, 10, measure=False, seed=42)
     circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
 
-    sim = CustomSimulatorManualOptimized(cx_backend="auto")
+    sim = CustomSimulatorManualOptimized(cx_backend="numba")
     result = sim.run(circuit_ucx)
     reference = mocked_statevector(circuit_ucx)
 
     aligned = align_global_phase(reference, result)
     assert np.allclose(reference, aligned)
+
+
+def test_python_and_numba_backends_match() -> None:
+    qc = random_circuit(5, 14, measure=False, seed=123)
+    circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
+
+    python_result = CustomSimulatorManualOptimized(cx_backend="python").run(circuit_ucx)
+    numba_result = CustomSimulatorManualOptimized(cx_backend="numba").run(circuit_ucx)
+
+    aligned = align_global_phase(python_result, numba_result)
+    assert np.allclose(python_result, aligned)
 
 
 def test_run_batch_equivalent_to_serial() -> None:
@@ -64,7 +75,7 @@ def test_run_batch_equivalent_to_serial() -> None:
         for seed in [11, 22, 33]
     ]
 
-    sim = CustomSimulatorManualOptimized(cx_backend="auto")
+    sim = CustomSimulatorManualOptimized(cx_backend="python")
     serial = [sim.run(circuit) for circuit in circuits]
     batch = sim.run_batch(circuits, max_workers=2)
 
@@ -89,7 +100,7 @@ def test_benchmark_cx_heavy_baseline_manual(benchmark: Any, n_qubits: int) -> No
 @pytest.mark.parametrize("n_qubits", range(5, 17))
 def test_benchmark_cx_heavy_optimized(benchmark: Any, n_qubits: int) -> None:
     circuit = make_cx_heavy_circuit(n_qubits=n_qubits, layers=4)
-    simulator = CustomSimulatorManualOptimized(cx_backend="auto")
+    simulator = CustomSimulatorManualOptimized(cx_backend="numba")
 
     benchmark.extra_info["qubits"] = n_qubits
     benchmark.extra_info["simulator"] = "manual-optimized"
