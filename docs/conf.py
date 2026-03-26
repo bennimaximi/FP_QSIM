@@ -35,5 +35,4 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_css_files = ["cards.css"]
-html_js_files = ["confetti.js"]
-html_js_files = ["fun_buttons.js"]
+html_js_files = ["confetti.js", "fun_buttons.js"]
