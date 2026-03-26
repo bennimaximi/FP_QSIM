@@ -23,6 +23,29 @@ How the data was produced
 2. Generate median plots from the JSON export:
    uv run python docs/plot_benchmark.py
 
+Notebook benchmark workflow
+---------------------------
+
+For interactive benchmarking and correctness checks, use:
+
+``docs/notebooks/statevector_benchmark_comparison.ipynb``
+
+The notebook compares four methods on the same random circuits:
+
+1. ``CustomSimulatorGeneral`` (einsum baseline)
+2. ``mocked_statevector`` (Qiskit reference)
+3. ``CustomSimulatorManualOptimized(cx_backend="python")``
+4. ``CustomSimulatorManualOptimized(cx_backend="numba")``
+
+It includes:
+
+1. A per-run comparison table (runtime and max statevector error vs reference)
+2. A qubit-sweep runtime plot
+3. A speedup plot for optimized python vs optimized numba backends
+
+Use this notebook when you want to inspect trend behavior and correctness
+in one place before exporting static benchmark JSON.
+
 Simulator Runtime Median Plot
 -----------------------------
 
@@ -54,3 +77,8 @@ The median curves show two clear trends:
 3. Practical takeaway: for tiny circuits, baseline/manual execution can still be
    fine, while medium-to-large CX-dominant workloads benefit substantially from
    the optimized implementation.
+
+4. Notebook plot takeaway: in the sweep plots, the optimized numba backend
+   should remain below optimized python in runtime for larger qubit counts,
+   while all methods should remain numerically aligned with the Qiskit
+   reference up to global phase.
