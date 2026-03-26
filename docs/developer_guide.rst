@@ -33,16 +33,15 @@ Main source modules:
 
 - ``src/fp_qsim/__init__.py``
   Re-exports public API symbols:
-  ``MockSimulator``, ``CustomSimulatorGeneral``,
-  ``CustomSimulatorManual``, ``CustomSimulatorManualOptimized``, and
+   ``MockSimulator``, ``CustomSimulatorManual``,
+   ``CustomSimulatorManualOptimized``, and
   ``mocked_statevector``.
 
 - ``src/fp_qsim/simulator.py``
   Contains:
 
   1. ``MockSimulator``: wrapper around Aer statevector simulation.
-  2. ``CustomSimulatorGeneral``: generic einsum-driven tensor contraction path.
-  3. ``CustomSimulatorManual``: manual special handling for ``u`` and ``cx``.
+   2. ``CustomSimulatorManual``: manual special handling for ``u`` and ``cx``.
 
 - ``src/fp_qsim/simulator_optimized.py``
   Contains ``CustomSimulatorManualOptimized`` plus low-level kernels:

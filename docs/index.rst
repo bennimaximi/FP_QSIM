@@ -46,6 +46,11 @@ Explore the docs
           <span class="doc-card-text">Solve common real-world tasks with direct, practical workflows.</span>
           <span class="doc-card-meta">Task-focused help</span>
        </a>
+       <a class="doc-card" href="tutorial.html">
+          <span class="doc-card-title">Tutorial</span>
+          <span class="doc-card-text">Learn by building a complete quantum coin game step by step.</span>
+          <span class="doc-card-meta">Guided lesson</span>
+       </a>
        <a class="doc-card js-api-reference-card" href="api.html">
           <span class="doc-card-title">API Reference</span>
           <span class="doc-card-text">Browse classes and functions for simulator components.</span>
@@ -99,6 +104,7 @@ Fun Buttons
 
    developer_guide.rst
    installation.rst
+   tutorial.rst
    how_to.rst
    explanation.rst
    api.rst
