@@ -33,6 +33,8 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 120
+target-version = "py314"
+extend-include = ["*.ipynb"]
 # Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
@@ -51,6 +53,26 @@ exclude = [
 
 [tool.ruff.format]
 docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "N", "B", "A", "C4", "SIM", "PT", "RET", "RUF", "TID", "ERA", "D", "ANN"]
+ignore = [
+    "D203",
+    "D213",
+    "RUF022"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/conf.py" = ["D100", "A001"]
+"docs/plot_benchmark.py" = ["D100"]
+"docs/notebooks/*.ipynb" = ["D", "ANN"]
+"playground/*.ipynb" = ["D", "ANN", "N", "ERA"]
+"playground/test.py" = ["D100"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+
 
 [tool.mypy]
 python_version = "3.11"
