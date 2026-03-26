@@ -3,10 +3,10 @@ Notebook Examples
 
 The project includes interactive notebooks to demonstrate the simulator behavior.
 
-Bell State Walkthrough
+Examples
 ----------------------
 
-This notebook builds a Bell circuit, runs your custom simulator, compares against a Qiskit reference statevector, and visualizes measurement probabilities.
+Explore the following Jupyter notebooks to see the `fp_qsim` library in action:
 
 .. toctree::
 	:maxdepth: 1
