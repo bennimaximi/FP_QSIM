@@ -12,9 +12,9 @@ from qiskit.quantum_info import Operator
 def _apply_cx_python_inplace(flat: np.ndarray, control: int, target: int) -> None:
     """Apply CX using explicit lower/upper index traversal around target."""
     n_states = flat.size
-    lower_block = 1 << target
-    pair_block = lower_block << 1
-    control_mask = 1 << control
+    lower_block = 2 ** target
+    pair_block = 2 ** (target + 1)
+    control_mask = 2 ** control
 
     for upper_base in range(0, n_states, pair_block):
         for lower in range(lower_block):
@@ -39,8 +39,8 @@ def _apply_u1_python_inplace(
     Basis indexing is little-endian: flat index = sum(bit_q * 2**q).
     """
     n_states = flat.size
-    lower_block = 1 << target
-    pair_block = lower_block << 1
+    lower_block = 2 ** target
+    pair_block = 2 ** (target + 1)
 
     for upper_base in range(0, n_states, pair_block):
         for lower in range(lower_block):
@@ -56,9 +56,9 @@ def _apply_u1_python_inplace(
 def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None:
     """Numba CX kernel with the same explicit lower/upper index traversal."""
     n_states = flat.size
-    lower_block = 1 << target
-    pair_block = lower_block << 1
-    control_mask = 1 << control
+    lower_block = 2 ** target
+    pair_block = 2 ** (target + 1)
+    control_mask = 2 ** control
 
     for upper_base in range(0, n_states, pair_block):
         for lower in range(lower_block):
@@ -81,8 +81,8 @@ def _apply_u1_numba_inplace(
 ) -> None:
     """Numba single-qubit kernel with explicit target-bit pair traversal."""
     n_states = flat.size
-    lower_block = 1 << target
-    pair_block = lower_block << 1
+    lower_block = 2 ** target
+    pair_block = 2 ** (target + 1)
 
     for upper_base in range(0, n_states, pair_block):
         for lower in range(lower_block):
