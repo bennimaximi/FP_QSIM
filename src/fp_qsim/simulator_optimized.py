@@ -1,35 +1,29 @@
 from __future__ import annotations
 
-import __main__
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-import multiprocessing as mp
-import sys
 from typing import Literal
 
+import numba as nb
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 
 
-try:
-    import numba as nb  # type: ignore[import-not-found]
-
-    _NUMBA_AVAILABLE = True
-except Exception:  # pragma: no cover - import-time fallback
-    nb = None  # type: ignore[assignment]
-    _NUMBA_AVAILABLE = False
-
-
 def _apply_cx_python_inplace(flat: np.ndarray, control: int, target: int) -> None:
-    """Apply CX in-place by swapping amplitudes in a flat statevector."""
+    """Apply CX using explicit lower/upper index traversal around target."""
     n_states = flat.size
-    target_mask = 1 << target
+    lower_block = 1 << target
+    pair_block = lower_block << 1
+    control_mask = 1 << control
 
-    for i in range(n_states):
-        if ((i >> control) & 1) == 1 and ((i >> target) & 1) == 0:
-            j = i | target_mask
-            flat[i], flat[j] = flat[j], flat[i]
+    for upper_base in range(0, n_states, pair_block):
+        for lower in range(lower_block):
+            i0 = upper_base + lower
+            i1 = i0 + lower_block
+            if (i0 & control_mask) != 0:
+                temp = flat[i0]
+                flat[i0] = flat[i1]
+                flat[i1] = temp
 
 
 def _apply_u1_python_inplace(
@@ -40,113 +34,91 @@ def _apply_u1_python_inplace(
     u10: complex,
     u11: complex,
 ) -> None:
-    """Apply a single-qubit unitary in-place on a flat statevector."""
+    """Apply 2x2 unitary on one qubit via explicit index-pair loops.
+
+    Basis indexing is little-endian: flat index = sum(bit_q * 2**q).
+    """
     n_states = flat.size
-    target_mask = 1 << target
+    lower_block = 1 << target
+    pair_block = lower_block << 1
 
-    for i in range(n_states):
-        if (i & target_mask) == 0:
-            j = i | target_mask
-            a0 = flat[i]
-            a1 = flat[j]
-            flat[i] = u00 * a0 + u01 * a1
-            flat[j] = u10 * a0 + u11 * a1
+    for upper_base in range(0, n_states, pair_block):
+        for lower in range(lower_block):
+            i0 = upper_base + lower
+            i1 = i0 + lower_block
+            a0 = flat[i0]
+            a1 = flat[i1]
+            flat[i0] = u00 * a0 + u01 * a1
+            flat[i1] = u10 * a0 + u11 * a1
 
 
-if _NUMBA_AVAILABLE:
+@nb.njit(cache=True)  # type: ignore[misc]
+def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None:
+    """Numba CX kernel with the same explicit lower/upper index traversal."""
+    n_states = flat.size
+    lower_block = 1 << target
+    pair_block = lower_block << 1
+    control_mask = 1 << control
 
-    @nb.njit(cache=True, parallel=True)  # type: ignore[misc]
-    def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None:
-        """Numba-parallel CX kernel for in-place amplitude swapping."""
-        n_states = flat.size
-        target_mask = 1 << target
+    for upper_base in range(0, n_states, pair_block):
+        for lower in range(lower_block):
+            i0 = upper_base + lower
+            i1 = i0 + lower_block
+            if (i0 & control_mask) != 0:
+                temp = flat[i0]
+                flat[i0] = flat[i1]
+                flat[i1] = temp
 
-        for i in nb.prange(n_states):
-            if ((i >> control) & 1) == 1 and ((i >> target) & 1) == 0:
-                j = i | target_mask
-                temp = flat[i]
-                flat[i] = flat[j]
-                flat[j] = temp
 
-    @nb.njit(cache=True, parallel=True)  # type: ignore[misc]
-    def _apply_u1_numba_inplace(
-        flat: np.ndarray,
-        target: int,
-        u00: complex,
-        u01: complex,
-        u10: complex,
-        u11: complex,
-    ) -> None:
-        """Numba-parallel single-qubit unitary kernel."""
-        n_states = flat.size
-        target_mask = 1 << target
+@nb.njit(cache=True)  # type: ignore[misc]
+def _apply_u1_numba_inplace(
+    flat: np.ndarray,
+    target: int,
+    u00: complex,
+    u01: complex,
+    u10: complex,
+    u11: complex,
+) -> None:
+    """Numba single-qubit kernel with explicit target-bit pair traversal."""
+    n_states = flat.size
+    lower_block = 1 << target
+    pair_block = lower_block << 1
 
-        for i in nb.prange(n_states):
-            if (i & target_mask) == 0:
-                j = i | target_mask
-                a0 = flat[i]
-                a1 = flat[j]
-                flat[i] = u00 * a0 + u01 * a1
-                flat[j] = u10 * a0 + u11 * a1
-
-else:
-
-    def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None:
-        """Fallback implementation if Numba is not available."""
-        _apply_cx_python_inplace(flat, control, target)
-
-    def _apply_u1_numba_inplace(
-        flat: np.ndarray,
-        target: int,
-        u00: complex,
-        u01: complex,
-        u10: complex,
-        u11: complex,
-    ) -> None:
-        """Fallback implementation if Numba is not available."""
-        _apply_u1_python_inplace(flat, target, u00, u01, u10, u11)
+    for upper_base in range(0, n_states, pair_block):
+        for lower in range(lower_block):
+            i0 = upper_base + lower
+            i1 = i0 + lower_block
+            a0 = flat[i0]
+            a1 = flat[i1]
+            flat[i0] = u00 * a0 + u01 * a1
+            flat[i1] = u10 * a0 + u11 * a1
 
 
 @dataclass
 class CustomSimulatorManualOptimized:
-    """Manual simulator with optional multicore optimization.
+    """Manual simulator with explicit loop kernels for ``u`` and ``cx``.
 
     Supports:
-    - Single-circuit speedups for CX gates using optional Numba parallelism.
-    - Multi-circuit process-parallel execution via ``run_batch``.
+    - Pure Python loop kernels for transparent indexing logic.
+    - Numba JIT kernels (cache enabled) with the same loop structure.
+    - Serial batch execution via ``run_batch``.
 
     Args:
-        cx_backend: Backend strategy for both ``u`` and ``cx`` kernels.
-            - ``"auto"``: use Numba if available, otherwise Python fallback.
-            - ``"numba"``: force Numba backend; raises if unavailable.
-            - ``"python"``: force pure Python backend.
-        num_threads: Optional Numba thread count for the CX kernel.
-            Ignored for Python backend.
+        cx_backend: Explicit backend choice for ``u`` and ``cx`` kernels.
+            - ``"python"``: use pure Python loops.
+            - ``"numba"``: use Numba JIT-compiled loops.
     """
 
-    cx_backend: Literal["auto", "numba", "python"] = "auto"
-    num_threads: int | None = None
+    cx_backend: Literal["numba", "python"] = "python"
 
     def __post_init__(self) -> None:
-        if self.cx_backend == "numba" and not _NUMBA_AVAILABLE:
-            raise ValueError("cx_backend='numba' requested, but numba is not installed.")
-
-        if self.num_threads is not None and self.num_threads < 1:
-            raise ValueError("num_threads must be >= 1 when provided.")
-
-    def _configure_numba_threads(self) -> None:
-        """Set Numba thread count when the Numba backend is active."""
-        if self.effective_cx_backend == "numba" and self.num_threads is not None and _NUMBA_AVAILABLE:
-            nb.set_num_threads(self.num_threads)
+        if self.cx_backend not in {"python", "numba"}:
+            raise ValueError("cx_backend must be either 'python' or 'numba'.")
 
     @property
     def effective_cx_backend(self) -> Literal["numba", "python"]:
-        """Return the backend that will actually be used."""
-        if self.cx_backend == "python":
-            return "python"
-        if self.cx_backend == "numba":
-            return "numba"
-        return "numba" if _NUMBA_AVAILABLE else "python"
+        """Return the explicitly selected backend."""
+        return self.cx_backend
 
     def apply_unitary(self, state: np.ndarray, gate_tensor: np.ndarray, qubits: list[int]) -> np.ndarray:
         """Apply a gate unitary to selected qubits on the state tensor."""
@@ -202,7 +174,6 @@ class CustomSimulatorManualOptimized:
         """Simulate a circuit with manual ``u`` and ``cx`` gate handling."""
         _ = shots
         n_qubits = circuit.num_qubits
-        self._configure_numba_threads()
 
         # Tensor axes are ordered as [q_{n-1}, ..., q_0] so flattening matches Qiskit's basis order.
         state = np.zeros([2] * n_qubits, dtype=complex)
@@ -246,48 +217,9 @@ class CustomSimulatorManualOptimized:
         shots: int = 1024,
         max_workers: int | None = None,
     ) -> list[np.ndarray]:
-        """Run multiple circuits in parallel using process workers.
-
-        For small batches, this method falls back to serial execution to avoid
-        unnecessary process startup overhead.
-        """
+        """Run multiple circuits serially with the selected backend."""
+        _ = max_workers
         if not circuits:
             return []
 
-        if len(circuits) == 1:
-            return [self.run(circuits[0], shots=shots)]
-
-        worker_payload = [
-            (circuit, shots, self.cx_backend, self.num_threads)
-            for circuit in circuits
-        ]
-
-        with ProcessPoolExecutor(
-            max_workers=max_workers,
-            mp_context=_get_multiprocessing_context(),
-        ) as executor:
-            return list(executor.map(_run_single_circuit_worker, worker_payload))
-
-
-def _get_multiprocessing_context() -> mp.context.BaseContext | None:
-    """Return a multiprocessing context suitable for the current platform."""
-    if sys.platform.startswith("win"):
-        return None
-
-    # In normal script/test execution, default context is safer.
-    has_main_file = bool(getattr(__main__, "__file__", None))
-    if has_main_file:
-        return None
-
-    # In interactive/STDIN sessions, spawn can fail because there is no __main__ file.
-    return mp.get_context("fork")
-
-
-def _run_single_circuit_worker(payload: tuple[QuantumCircuit, int, str, int | None]) -> np.ndarray:
-    """Process worker entrypoint for run_batch."""
-    circuit, shots, cx_backend, num_threads = payload
-    sim = CustomSimulatorManualOptimized(
-        cx_backend=cx_backend,  # type: ignore[arg-type]
-        num_threads=num_threads,
-    )
-    return sim.run(circuit, shots=shots)
+        return [self.run(circuit, shots=shots) for circuit in circuits]
