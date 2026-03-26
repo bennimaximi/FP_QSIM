@@ -1,34 +1,34 @@
-# pytest code for simulator.py
-import pytest
+"""Tests and benchmarks for simulator behavior against Qiskit references."""
 
-# import glob
-from typing import Any
-from qiskit.circuit.library import QFTGate
-from qiskit import QuantumCircuit, transpile
-
-# from fp_qsim.simulator import CustomSimulatorManual
-from fp_qsim.simulator_optimized import CustomSimulatorManualOptimized
-from qiskit_aer import AerSimulator
 import numpy as np
+import pytest
+from pytest_benchmark.fixture import BenchmarkFixture
+from qiskit import QuantumCircuit, transpile
+from qiskit.circuit.library import QFTGate
 from qiskit.circuit.random import random_circuit
+from qiskit_aer import AerSimulator
+
+from fp_qsim.simulator_optimized import CustomSimulatorManualOptimized
 from fp_qsim.state_vector import mocked_statevector
 
 
 def reference_simulator() -> AerSimulator:
-    """Creates a reference Qiskit AerSimulator.
+    """Create a reference Qiskit AerSimulator.
 
     Returns:
         AerSimulator: An AerSimulator explicitly configured to use the
             exact 'statevector' method.
+
     """
     return AerSimulator(method="statevector")
 
 
 def custom_simulator() -> CustomSimulatorManualOptimized:
-    """Creates an instance of the manual custom simulator.
+    """Create an instance of the manual custom simulator.
 
     Returns:
         CustomSimulatorManual: The custom simulator optimized for 'u' and 'cx' gates.
+
     """
     return CustomSimulatorManualOptimized()
 
@@ -48,6 +48,7 @@ def align_global_phase(reference: np.ndarray, candidate: np.ndarray) -> np.ndarr
     Returns:
         np.ndarray: The candidate statevector multiplied by the calculated
             phase factor so it can be directly compared to the reference.
+
     """
     anchor = int(np.argmax(np.abs(candidate)))
     if np.isclose(candidate[anchor], 0.0):
@@ -64,6 +65,7 @@ def test_bell_state() -> None:
 
     Returns:
         None.
+
     """
     # Create a Bell state circuit
     qc = QuantumCircuit(2)
@@ -77,7 +79,6 @@ def test_bell_state() -> None:
     custom_sim = custom_simulator()
     compiled_circuit = transpile(circuit_ucx, ref_sim)
 
-    # ref_result = ref_sim.run(compiled_circuit).result()
     custom_result = custom_sim.run(circuit_ucx, shots=1024)
 
     # Extract statevectors
@@ -96,6 +97,7 @@ def test_ghz_state() -> None:
 
     Returns:
         None.
+
     """
     qc = QuantumCircuit(3)
     qc.h(0)
@@ -108,7 +110,6 @@ def test_ghz_state() -> None:
     custom_sim = custom_simulator()
     compiled_circuit = transpile(circuit_ucx, ref_sim)
 
-    # ref_result = ref_sim.run(compiled_circuit).result()
     custom_result = custom_sim.run(circuit_ucx, shots=1024)
 
     ref_statevector = mocked_statevector(compiled_circuit)
@@ -125,6 +126,7 @@ def test_single_qubit_gates() -> None:
 
     Returns:
         None.
+
     """
     qc = QuantumCircuit(1)
     qc.x(0)  # Flip to |1>
@@ -136,7 +138,6 @@ def test_single_qubit_gates() -> None:
     custom_sim = custom_simulator()
     compiled_circuit = transpile(circuit_ucx, ref_sim)
 
-    # ref_result = ref_sim.run(compiled_circuit).result()
     custom_result = custom_sim.run(circuit_ucx, shots=1024)
 
     ref_statevector = mocked_statevector(compiled_circuit)
@@ -152,6 +153,7 @@ def test_qft() -> None:
 
     Returns:
         None.
+
     """
     qft_circ = QuantumCircuit(5)
     qft_circ.x(4)
@@ -163,7 +165,6 @@ def test_qft() -> None:
     ref_sim = reference_simulator()
     custom_sim = custom_simulator()
     compiled_circuit = transpile(circuit_ucx, ref_sim)
-    # ref_result = ref_sim.run(compiled_circuit).result()
     custom_result = custom_sim.run(circuit_ucx, shots=1024)
     ref_statevector = mocked_statevector(compiled_circuit)
     custom_statevector = custom_result  # .get_statevector()
@@ -179,9 +180,9 @@ def test_random_circuit() -> None:
 
     Returns:
         None.
+
     """
     qc = random_circuit(4, 10, measure=False, seed=1)
-    # qc.save_statevector()
     circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
     ref_sim = reference_simulator()
     custom_sim = custom_simulator()
@@ -195,18 +196,19 @@ def test_random_circuit() -> None:
 
 @pytest.mark.benchmark(group="simulator-runtime")
 @pytest.mark.parametrize("n_qubits", range(5, 17))
-def htest_benchmark_custom_simulator(benchmark: Any, n_qubits: int) -> None:
+def htest_benchmark_custom_simulator(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmarks the runtime of the custom simulator.
 
     Runs a randomly generated circuit of depth (2 * n_qubits) and measures
     execution time using pytest-benchmark.
 
     Args:
-        benchmark (Any): The pytest-benchmark fixture.
+        benchmark (BenchmarkFixture): The pytest-benchmark fixture.
         n_qubits (int): The number of qubits for the current parameterized run.
 
     Returns:
         None.
+
     """
     depth = 2 * n_qubits
     custom_sim = custom_simulator()
@@ -221,18 +223,19 @@ def htest_benchmark_custom_simulator(benchmark: Any, n_qubits: int) -> None:
 
 @pytest.mark.benchmark(group="simulator-runtime")
 @pytest.mark.parametrize("n_qubits", range(5, 17))
-def htest_benchmark_aer_simulator(benchmark: Any, n_qubits: int) -> None:
+def htest_benchmark_aer_simulator(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmarks the runtime of the reference Qiskit Aer simulator.
 
     Runs a randomly generated circuit of depth (2 * n_qubits) and measures
     execution time using pytest-benchmark for comparison against the custom simulator.
 
     Args:
-        benchmark (Any): The pytest-benchmark fixture.
+        benchmark (BenchmarkFixture): The pytest-benchmark fixture.
         n_qubits (int): The number of qubits for the current parameterized run.
 
     Returns:
         None.
+
     """
     depth = 2 * n_qubits
     ref_sim = reference_simulator()

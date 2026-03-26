@@ -1,9 +1,11 @@
-# mocked simulator for testing purposes
-from qiskit import QuantumCircuit
-from qiskit_aer import AerSimulator
+"""Reference simulators and manual statevector simulation implementations."""
+
 from dataclasses import dataclass
+
 import numpy as np
+from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
+from qiskit_aer import AerSimulator
 
 
 @dataclass
@@ -24,9 +26,9 @@ class MockSimulator(AerSimulator):
 
         Returns:
             object: Qiskit result object containing simulation data.
+
         """
-        result = self._statevector_simulator.run(circuits, shots=shots).result()
-        return result
+        return self._statevector_simulator.run(circuits, shots=shots).result()
 
 
 @dataclass
@@ -48,6 +50,7 @@ class CustomSimulatorGeneral:
 
         Returns:
             np.ndarray: Flattened complex statevector.
+
         """
         n_qubits = circuit.num_qubits
 
@@ -70,7 +73,6 @@ class CustomSimulatorGeneral:
                 continue
             # Gate tensor has indices: [out_0, ..., out_k-1, in_0, ..., in_k-1].
             gate_tensor = Operator(gate).data.reshape([2] * (2 * n_gate_qubits))
-            # print(Operator(gate).data)
 
             # Map logical qubits to tensor axes in state.
             state_axes = list(range(n_qubits))[::-1]
@@ -80,7 +82,6 @@ class CustomSimulatorGeneral:
             new_gate_out_axes = list(range(n_qubits, n_qubits + n_gate_qubits))
             for i, axis in enumerate(qubit_axes):
                 out_axes[n_qubits - 1 - axis] = new_gate_out_axes[i]
-            # print(new_gate_out_axes, qubit_axes, state_axes, out_axes)
 
             # Contract gate inputs with target state axes and keep updated state axes.
             state = np.einsum(
@@ -113,6 +114,7 @@ class CustomSimulatorManual:
 
         Returns:
             np.ndarray: Updated state tensor.
+
         """
         n_qubits = state.ndim
         state_axes = list(range(n_qubits))[::-1]
@@ -145,6 +147,7 @@ class CustomSimulatorManual:
 
         Returns:
             np.ndarray: Updated n-dimensional state tensor after CX.
+
         """
         n_qubits = state.ndim
         flat = state.reshape(-1).copy()
@@ -169,8 +172,8 @@ class CustomSimulatorManual:
 
         Returns:
             np.ndarray: Flattened complex statevector.
+
         """
-        # circuit = transpile(circuit, basis_gates=['u', 'cx'])
         n_qubits = circuit.num_qubits
 
         # Tensor axes are ordered as [q_{n-1}, ..., q_0] so flattening matches Qiskit's basis order.
@@ -189,13 +192,13 @@ class CustomSimulatorManual:
                 "load_statevector",
             ]:
                 continue
-            elif gate.name == "u":
+            if gate.name == "u":
                 n_gate_qubits = len(qubits)
                 # Qiskit's 'u' gate is a general single-qubit unitary, so we can directly use its matrix.
                 gate_tensor = Operator(gate).data.reshape([2] * (2 * n_gate_qubits))
                 state = self.apply_unitary(state, gate_tensor, qubits)
                 continue
-            elif gate.name == "cx":
+            if gate.name == "cx":
                 control, target = qubits
                 state = self.apply_cx(state, control, target)
 

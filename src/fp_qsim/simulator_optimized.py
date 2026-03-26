@@ -1,7 +1,10 @@
+"""Optimized custom simulator kernels and backend selection logic."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
+
 import numba as nb
 import numpy as np
 from qiskit import QuantumCircuit
@@ -18,6 +21,7 @@ def _apply_cx_python_inplace(flat: np.ndarray, control: int, target: int) -> Non
 
     Returns:
         None. The input array is mutated in place.
+
     """
     if control == target:
         return
@@ -82,6 +86,7 @@ def _apply_u1_loop_body(
 
     Returns:
         None. Results are written to flat_out.
+
     """
     target_stride = 2**target
     pair_stride = 2 ** (target + 1)
@@ -117,6 +122,7 @@ def _apply_u1_python(
 
     Returns:
         Updated flattened statevector.
+
     """
     lower = 2**target
     upper = flat.size // (2 ** (target + 1))
@@ -136,6 +142,7 @@ def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None
 
     Returns:
         None. The input array is mutated in place.
+
     """
     if control == target:
         return
@@ -197,6 +204,7 @@ def _apply_u1_numba(
 
     Returns:
         Updated flattened statevector.
+
     """
     lower = 2**target
     upper = flat.size // (2 ** (target + 1))
@@ -218,6 +226,7 @@ class CustomSimulatorManualOptimized:
         cx_backend: Explicit backend choice for ``u`` and ``cx`` kernels.
             - ``"python"``: use pure Python loops.
             - ``"numba"``: use Numba JIT-compiled loops.
+
     """
 
     cx_backend: Literal["numba", "python"] = "python"
@@ -227,6 +236,7 @@ class CustomSimulatorManualOptimized:
 
         Raises:
             ValueError: If cx_backend is not one of "python" or "numba".
+
         """
         if self.cx_backend not in {"python", "numba"}:
             raise ValueError("cx_backend must be either 'python' or 'numba'.")
@@ -237,6 +247,7 @@ class CustomSimulatorManualOptimized:
 
         Returns:
             Backend identifier, either "numba" or "python".
+
         """
         return self.cx_backend
 
@@ -250,6 +261,7 @@ class CustomSimulatorManualOptimized:
 
         Returns:
             Updated state tensor.
+
         """
         n_qubits = state.ndim
         state_axes = list(range(n_qubits))[::-1]
@@ -279,6 +291,7 @@ class CustomSimulatorManualOptimized:
 
         Returns:
             Updated state tensor after applying CX.
+
         """
         n_qubits = state.ndim
         flat = state.reshape(-1).copy()
@@ -301,6 +314,7 @@ class CustomSimulatorManualOptimized:
 
         Returns:
             Updated state tensor after applying the single-qubit gate.
+
         """
         n_qubits = state.ndim
         flat = state.reshape(-1).copy()
@@ -326,6 +340,7 @@ class CustomSimulatorManualOptimized:
 
         Returns:
             Flattened complex statevector.
+
         """
         _ = shots
         n_qubits = circuit.num_qubits
@@ -405,6 +420,7 @@ class CustomSimulatorManualOptimized:
 
         Returns:
             List of flattened statevectors, one per circuit.
+
         """
         _ = max_workers
         if not circuits:

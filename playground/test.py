@@ -1,5 +1,6 @@
-from fp_qsim.pauli import sigmax, sigmay, sigmaz
 import numpy as np
+
+from fp_qsim.pauli import sigmax, sigmay, sigmaz
 
 # Test the Pauli matrices:
 
