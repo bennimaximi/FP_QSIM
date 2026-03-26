@@ -31,6 +31,11 @@ Explore the docs
 .. raw:: html
 
     <div class="doc-card-grid">
+       <a class="doc-card" href="developer_guide.html">
+          <span class="doc-card-title">Developer Guide</span>
+          <span class="doc-card-text">Get the full maintainer workflow: setup, testing, extension, and pitfalls.</span>
+          <span class="doc-card-meta">Contribute faster</span>
+       </a>
        <a class="doc-card" href="installation.html">
           <span class="doc-card-title">Installation</span>
           <span class="doc-card-text">Set up dependencies and your local environment quickly.</span>
@@ -53,11 +58,31 @@ Explore the docs
        </a>
     </div>
 
+Fun Buttons
+-----------
+
+.. raw:: html
+
+    <section class="doc-fun" id="fun-zone">
+       <p class="doc-fun-kicker">Playground</p>
+       <h3 class="doc-fun-title">Push a button, get a tiny surprise</h3>
+       <p class="doc-fun-subtitle">Pure client-side, harmless, and reversible.</p>
+       <div class="doc-fun-buttons">
+          <button class="doc-fun-button" type="button" data-fun-action="theme-jump">Theme jump</button>
+          <button class="doc-fun-button" type="button" data-fun-action="shuffle-cards">Shuffle cards</button>
+          <button class="doc-fun-button" type="button" data-fun-action="launch-stars">Launch stars</button>
+          <button class="doc-fun-button" type="button" data-fun-action="launch-fireworks">Fireworks</button>
+          <button class="doc-fun-button" type="button" data-fun-action="show-fact">Quantum fact</button>
+       </div>
+       <p class="doc-fun-output" id="doc-fun-output">Press a button to see what happens.</p>
+    </section>
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    :hidden:
 
+   developer_guide.rst
    installation.rst
    api.rst
    benchmark.rst
