@@ -61,7 +61,7 @@ if _NUMBA_AVAILABLE:
         n_states = flat.size
         target_mask = 1 << target
 
-        for i in nb.prange(n_states):
+        for i in nb.prange(n_states):  # type: ignore[not-iterable]
             if ((i >> control) & 1) == 1 and ((i >> target) & 1) == 0:
                 j = i | target_mask
                 temp = flat[i]
@@ -257,10 +257,7 @@ class CustomSimulatorManualOptimized:
         if len(circuits) == 1:
             return [self.run(circuits[0], shots=shots)]
 
-        worker_payload = [
-            (circuit, shots, self.cx_backend, self.num_threads)
-            for circuit in circuits
-        ]
+        worker_payload = [(circuit, shots, self.cx_backend, self.num_threads) for circuit in circuits]
 
         with ProcessPoolExecutor(
             max_workers=max_workers,

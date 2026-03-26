@@ -60,8 +60,7 @@ def test_optimized_numba_or_auto_matches_reference_random() -> None:
 
 def test_run_batch_equivalent_to_serial() -> None:
     circuits = [
-        transpile(random_circuit(4, 8, measure=False, seed=seed), basis_gates=["u", "cx"])
-        for seed in [11, 22, 33]
+        transpile(random_circuit(4, 8, measure=False, seed=seed), basis_gates=["u", "cx"]) for seed in [11, 22, 33]
     ]
 
     sim = CustomSimulatorManualOptimized(cx_backend="auto")
