@@ -223,6 +223,17 @@ h3 {
   animation: fun-star-burst 620ms ease-out forwards;
 }
 
+.doc-fun-firework {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  pointer-events: none;
+  opacity: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.75));
+  animation: fun-firework-burst 820ms ease-out forwards;
+}
+
 .doc-card-grid.fun-shuffle .doc-card {
   animation: fun-card-shuffle 520ms ease;
 }
@@ -250,6 +261,20 @@ h3 {
   }
   100% {
     transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes fun-firework-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.25);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.05);
+    opacity: 0;
   }
 }
 

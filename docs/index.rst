@@ -71,6 +71,7 @@ Fun Buttons
           <button class="doc-fun-button" type="button" data-fun-action="theme-jump">Theme jump</button>
           <button class="doc-fun-button" type="button" data-fun-action="shuffle-cards">Shuffle cards</button>
           <button class="doc-fun-button" type="button" data-fun-action="launch-stars">Launch stars</button>
+          <button class="doc-fun-button" type="button" data-fun-action="launch-fireworks">Fireworks</button>
           <button class="doc-fun-button" type="button" data-fun-action="show-fact">Quantum fact</button>
        </div>
        <p class="doc-fun-output" id="doc-fun-output">Press a button to see what happens.</p>

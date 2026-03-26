@@ -81,6 +81,37 @@
       setOutput("Star burst launched. Absolutely necessary for science.");
     }
 
+    function launchFireworks() {
+      var colors = ["#ff3f6c", "#ffb703", "#3a86ff", "#06d6a0", "#ffd166", "#9b5de5"];
+      var burstCenters = [
+        { x: 18, y: 70 },
+        { x: 50, y: 42 },
+        { x: 82, y: 68 }
+      ];
+
+      burstCenters.forEach(function (center, centerIndex) {
+        for (var i = 0; i < 18; i += 1) {
+          var spark = document.createElement("span");
+          spark.className = "doc-fun-firework";
+          spark.style.backgroundColor = colors[(i + centerIndex) % colors.length];
+          spark.style.left = String(center.x) + "%";
+          spark.style.top = String(center.y) + "%";
+          spark.style.setProperty("--dx", String(Math.round((Math.random() - 0.5) * 240)) + "px");
+          spark.style.setProperty("--dy", String(Math.round((Math.random() - 0.5) * 160)) + "px");
+          zone.appendChild(spark);
+          (function (node) {
+            window.setTimeout(function () {
+              if (node.parentNode) {
+                node.parentNode.removeChild(node);
+              }
+            }, 920);
+          })(spark);
+        }
+      });
+
+      setOutput("Fireworks launched. The docs are celebrating.");
+    }
+
     function showFact() {
       var fact = facts[Math.floor(Math.random() * facts.length)];
       setOutput("Quantum fact: " + fact);
@@ -99,6 +130,10 @@
         }
         if (action === "launch-stars") {
           launchStars();
+          return;
+        }
+        if (action === "launch-fireworks") {
+          launchFireworks();
           return;
         }
         if (action === "show-fact") {
