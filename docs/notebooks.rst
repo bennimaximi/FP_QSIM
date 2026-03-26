@@ -13,6 +13,7 @@ This notebook builds a Bell circuit, runs your custom simulator, compares agains
 
 	notebooks/bell_demo
 	notebooks/simulator_quickstart
+	notebooks/statevector_benchmark_comparison
 
 How to run locally
 ------------------
@@ -20,4 +21,5 @@ How to run locally
 1. Start Jupyter Lab from the project root.
 2. Open the notebook at docs/notebooks/bell_demo.ipynb.
 3. Open docs/notebooks/simulator_quickstart.ipynb for the quickstart workflow.
-4. Run all cells.
+4. Open docs/notebooks/statevector_benchmark_comparison.ipynb for benchmark plots and speedup analysis.
+5. Run all cells.
