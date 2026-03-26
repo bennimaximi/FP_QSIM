@@ -32,9 +32,9 @@ class MockSimulator(AerSimulator):
 class CustomSimulatorGeneral:
     """General-purpose statevector simulator based on tensor contraction.
 
-    The simulator initializes an n-dimensional state tensor and applies each gate
-    by contracting the state tensor with the corresponding unitary using
-    ``numpy.einsum``.
+    This simulator initializes a quantum state as an n-dimensional numpy tensor
+    and applies quantum gates by contracting the state tensor with the gate
+    unitary matrices using numpy.einsum.
     """
 
     def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:
