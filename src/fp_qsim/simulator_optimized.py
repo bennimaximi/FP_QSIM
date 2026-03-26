@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
-
 import numba as nb
 import numpy as np
 from qiskit import QuantumCircuit
@@ -10,7 +9,16 @@ from qiskit.quantum_info import Operator
 
 
 def _apply_cx_python_inplace(flat: np.ndarray, control: int, target: int) -> None:
-    """Apply CX using explicit lower/upper index traversal around target."""
+    """Apply a CX gate in place using explicit lower/upper index traversal.
+
+    Args:
+        flat: Flattened statevector in little-endian basis order.
+        control: Control qubit index.
+        target: Target qubit index.
+
+    Returns:
+        None. The input array is mutated in place.
+    """
     if control == target:
         return
 
@@ -48,35 +56,87 @@ def _apply_cx_python_inplace(flat: np.ndarray, control: int, target: int) -> Non
             flat[i1] = temp
 
 
-def _apply_u1_python_inplace(
-    flat: np.ndarray,
+def _apply_u1_loop_body(
+    flat_in: np.ndarray,
+    flat_out: np.ndarray,
+    lower: int,
+    upper: int,
     target: int,
     u00: complex,
     u01: complex,
     u10: complex,
     u11: complex,
 ) -> None:
-    """Apply 2x2 unitary on one qubit via explicit index-pair loops.
+    """Apply one single-qubit update pass using shared upper/lower traversal.
 
-    Basis indexing is little-endian: flat index = sum(bit_q * 2**q).
+    Args:
+        flat_in: Input flattened statevector.
+        flat_out: Output flattened statevector.
+        lower: Number of lower indices, equal to 2**target.
+        upper: Number of upper index blocks.
+        target: Target qubit index.
+        u00: Matrix element (0, 0) of the 2x2 gate.
+        u01: Matrix element (0, 1) of the 2x2 gate.
+        u10: Matrix element (1, 0) of the 2x2 gate.
+        u11: Matrix element (1, 1) of the 2x2 gate.
+
+    Returns:
+        None. Results are written to flat_out.
     """
-    n_states = flat.size
-    lower_block = 2**target
-    pair_block = 2 ** (target + 1)
+    target_stride = 2**target
+    pair_stride = 2 ** (target + 1)
 
-    for upper_base in range(0, n_states, pair_block):
-        for lower in range(lower_block):
-            i0 = upper_base + lower
-            i1 = i0 + lower_block
-            a0 = flat[i0]
-            a1 = flat[i1]
-            flat[i0] = u00 * a0 + u01 * a1
-            flat[i1] = u10 * a0 + u11 * a1
+    for upper_idx in range(upper):
+        upper_base = upper_idx * pair_stride
+        for lower_idx in range(lower):
+            i0 = lower_idx + upper_base
+            i1 = i0 + target_stride
+            a0 = flat_in[i0]
+            a1 = flat_in[i1]
+            flat_out[i0] = u00 * a0 + u01 * a1
+            flat_out[i1] = u10 * a0 + u11 * a1
+
+
+def _apply_u1_python(
+    flat: np.ndarray,
+    target: int,
+    u00: complex,
+    u01: complex,
+    u10: complex,
+    u11: complex,
+) -> np.ndarray:
+    """Apply a 2x2 unitary to one qubit using Python loop traversal.
+
+    Args:
+        flat: Input flattened statevector.
+        target: Target qubit index.
+        u00: Matrix element (0, 0) of the 2x2 gate.
+        u01: Matrix element (0, 1) of the 2x2 gate.
+        u10: Matrix element (1, 0) of the 2x2 gate.
+        u11: Matrix element (1, 1) of the 2x2 gate.
+
+    Returns:
+        Updated flattened statevector.
+    """
+    lower = 2**target
+    upper = flat.size // (2 ** (target + 1))
+    flat_out = np.empty_like(flat)
+    _apply_u1_loop_body(flat, flat_out, lower, upper, target, u00, u01, u10, u11)
+    return flat_out
 
 
 @nb.njit(cache=True)  # type: ignore[misc]
 def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None:
-    """Numba CX kernel with the same explicit lower/upper index traversal."""
+    """Apply a CX gate in place using the Numba-compiled CX traversal.
+
+    Args:
+        flat: Flattened statevector in little-endian basis order.
+        control: Control qubit index.
+        target: Target qubit index.
+
+    Returns:
+        None. The input array is mutated in place.
+    """
     if control == target:
         return
 
@@ -114,28 +174,35 @@ def _apply_cx_numba_inplace(flat: np.ndarray, control: int, target: int) -> None
             flat[i1] = temp
 
 
-@nb.njit(cache=True)  # type: ignore[misc]
-def _apply_u1_numba_inplace(
+_apply_u1_numba_kernel = nb.njit(cache=True)(_apply_u1_loop_body)
+
+
+def _apply_u1_numba(
     flat: np.ndarray,
     target: int,
     u00: complex,
     u01: complex,
     u10: complex,
     u11: complex,
-) -> None:
-    """Numba single-qubit kernel with explicit target-bit pair traversal."""
-    n_states = flat.size
-    lower_block = 2**target
-    pair_block = 2 ** (target + 1)
+) -> np.ndarray:
+    """Apply a 2x2 unitary to one qubit using a Numba-compiled loop kernel.
 
-    for upper_base in range(0, n_states, pair_block):
-        for lower in range(lower_block):
-            i0 = upper_base + lower
-            i1 = i0 + lower_block
-            a0 = flat[i0]
-            a1 = flat[i1]
-            flat[i0] = u00 * a0 + u01 * a1
-            flat[i1] = u10 * a0 + u11 * a1
+    Args:
+        flat: Input flattened statevector.
+        target: Target qubit index.
+        u00: Matrix element (0, 0) of the 2x2 gate.
+        u01: Matrix element (0, 1) of the 2x2 gate.
+        u10: Matrix element (1, 0) of the 2x2 gate.
+        u11: Matrix element (1, 1) of the 2x2 gate.
+
+    Returns:
+        Updated flattened statevector.
+    """
+    lower = 2**target
+    upper = flat.size // (2 ** (target + 1))
+    flat_out = np.empty_like(flat)
+    _apply_u1_numba_kernel(flat, flat_out, lower, upper, target, u00, u01, u10, u11)
+    return flat_out
 
 
 @dataclass
@@ -156,16 +223,34 @@ class CustomSimulatorManualOptimized:
     cx_backend: Literal["numba", "python"] = "python"
 
     def __post_init__(self) -> None:
+        """Validate backend selection after dataclass initialization.
+
+        Raises:
+            ValueError: If cx_backend is not one of "python" or "numba".
+        """
         if self.cx_backend not in {"python", "numba"}:
             raise ValueError("cx_backend must be either 'python' or 'numba'.")
 
     @property
     def effective_cx_backend(self) -> Literal["numba", "python"]:
-        """Return the explicitly selected backend."""
+        """Return the explicitly selected backend.
+
+        Returns:
+            Backend identifier, either "numba" or "python".
+        """
         return self.cx_backend
 
     def apply_unitary(self, state: np.ndarray, gate_tensor: np.ndarray, qubits: list[int]) -> np.ndarray:
-        """Apply a gate unitary to selected qubits on the state tensor."""
+        """Apply a gate tensor to selected qubits of the state tensor.
+
+        Args:
+            state: Current n-dimensional state tensor.
+            gate_tensor: Gate tensor reshaped as [out..., in...].
+            qubits: Logical qubit indices acted on by the gate.
+
+        Returns:
+            Updated state tensor.
+        """
         n_qubits = state.ndim
         state_axes = list(range(n_qubits))[::-1]
         qubit_axes = list(qubits)
@@ -185,7 +270,16 @@ class CustomSimulatorManualOptimized:
         )
 
     def apply_cx(self, state: np.ndarray, control: int, target: int) -> np.ndarray:
-        """Apply CX using the selected backend."""
+        """Apply a CX gate using the selected backend.
+
+        Args:
+            state: Current n-dimensional state tensor.
+            control: Control qubit index.
+            target: Target qubit index.
+
+        Returns:
+            Updated state tensor after applying CX.
+        """
         n_qubits = state.ndim
         flat = state.reshape(-1).copy()
 
@@ -198,7 +292,16 @@ class CustomSimulatorManualOptimized:
         return flat.reshape([2] * n_qubits)
 
     def apply_u_single_qubit(self, state: np.ndarray, target: int, gate_matrix: np.ndarray) -> np.ndarray:
-        """Apply a single-qubit unitary using backend-specific in-place kernels."""
+        """Apply a single-qubit unitary using backend-specific loop kernels.
+
+        Args:
+            state: Current n-dimensional state tensor.
+            target: Target qubit index.
+            gate_matrix: 2x2 unitary matrix.
+
+        Returns:
+            Updated state tensor after applying the single-qubit gate.
+        """
         n_qubits = state.ndim
         flat = state.reshape(-1).copy()
 
@@ -208,14 +311,22 @@ class CustomSimulatorManualOptimized:
         u11 = complex(gate_matrix[1, 1])
 
         if self.effective_cx_backend == "numba":
-            _apply_u1_numba_inplace(flat, target, u00, u01, u10, u11)
+            flat = _apply_u1_numba(flat, target, u00, u01, u10, u11)
         else:
-            _apply_u1_python_inplace(flat, target, u00, u01, u10, u11)
+            flat = _apply_u1_python(flat, target, u00, u01, u10, u11)
 
         return flat.reshape([2] * n_qubits)
 
     def run(self, circuit: QuantumCircuit, shots: int = 1024) -> np.ndarray:
-        """Simulate a circuit with manual ``u`` and ``cx`` gate handling."""
+        """Simulate a circuit with manual u and cx gate handling.
+
+        Args:
+            circuit: Quantum circuit to simulate.
+            shots: Shot count placeholder (not used for deterministic statevector output).
+
+        Returns:
+            Flattened complex statevector.
+        """
         _ = shots
         n_qubits = circuit.num_qubits
 
@@ -257,9 +368,9 @@ class CustomSimulatorManualOptimized:
                 u11 = complex(phase_phi_lam * cos_half)
 
                 if self.effective_cx_backend == "numba":
-                    _apply_u1_numba_inplace(flat, target, u00, u01, u10, u11)
+                    flat = _apply_u1_numba(flat, target, u00, u01, u10, u11)
                 else:
-                    _apply_u1_python_inplace(flat, target, u00, u01, u10, u11)
+                    flat = _apply_u1_python(flat, target, u00, u01, u10, u11)
                 continue
 
             if gate.name == "cx":
@@ -285,7 +396,16 @@ class CustomSimulatorManualOptimized:
         shots: int = 1024,
         max_workers: int | None = None,
     ) -> list[np.ndarray]:
-        """Run multiple circuits serially with the selected backend."""
+        """Run multiple circuits serially with the selected backend.
+
+        Args:
+            circuits: Circuits to execute.
+            shots: Shot count placeholder forwarded to run.
+            max_workers: Unused compatibility parameter.
+
+        Returns:
+            List of flattened statevectors, one per circuit.
+        """
         _ = max_workers
         if not circuits:
             return []

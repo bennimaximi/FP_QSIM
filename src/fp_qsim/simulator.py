@@ -11,6 +11,7 @@ class MockSimulator(AerSimulator):
     """Wrapper around AerSimulator configured for statevector results."""
 
     def __init__(self) -> None:
+        """Initialize the wrapped Aer statevector simulator instance."""
         super().__init__()
         self._statevector_simulator = AerSimulator(method="statevector")
 

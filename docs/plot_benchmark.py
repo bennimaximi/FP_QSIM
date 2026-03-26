@@ -14,6 +14,16 @@ OUTPUT_CX_HEAVY_PNG = ROOT / "_static" / "benchmark_cx_heavy_q5_16.png"
 
 
 def _load_medians_by_name(path: Path, lhs_token: str, rhs_token: str) -> tuple[dict[int, float], dict[int, float]]:
+    """Load benchmark medians grouped by lhs/rhs name tokens.
+
+    Args:
+        path: Path to the pytest-benchmark JSON results file.
+        lhs_token: Substring identifying left-hand benchmark entries.
+        rhs_token: Substring identifying right-hand benchmark entries.
+
+    Returns:
+        Two maps from qubit count to median runtime in milliseconds.
+    """
     data = json.loads(path.read_text(encoding="utf-8"))
     lhs: dict[int, float] = {}
     rhs: dict[int, float] = {}
@@ -34,6 +44,17 @@ def _load_medians_by_name(path: Path, lhs_token: str, rhs_token: str) -> tuple[d
 
 
 def _validate_qubit_range(qubits: Iterable[int]) -> None:
+    """Validate that benchmark results cover qubits 5 through 16.
+
+    Args:
+        qubits: Qubit counts found in parsed benchmark entries.
+
+    Raises:
+        ValueError: If the observed qubit set differs from the expected range.
+
+    Returns:
+        None.
+    """
     expected = set(range(5, 17))
     observed = set(qubits)
     if observed != expected:
@@ -53,6 +74,22 @@ def _plot_pair(
     title: str,
     output_path: Path,
 ) -> None:
+    """Plot runtime curves and ratio curve, then save to disk.
+
+    Args:
+        qubits: Qubit counts for the x-axis.
+        lhs_ms: Left-hand median runtimes in milliseconds.
+        rhs_ms: Right-hand median runtimes in milliseconds.
+        ratio: Elementwise ratio series for the second subplot.
+        lhs_label: Legend label for lhs_ms.
+        rhs_label: Legend label for rhs_ms.
+        ratio_label: Y-axis label for the ratio subplot.
+        title: Figure title for the runtime subplot.
+        output_path: Destination path for the rendered PNG.
+
+    Returns:
+        None.
+    """
     fig, (ax_time, ax_ratio) = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
 
     ax_time.plot(qubits, lhs_ms, marker="o", label=lhs_label)
@@ -74,6 +111,11 @@ def _plot_pair(
 
 
 def main() -> None:
+    """Generate benchmark plots for simulator runtime and CX-heavy speedup.
+
+    Returns:
+        None.
+    """
     custom, aer = _load_medians_by_name(
         INPUT_JSON,
         lhs_token="test_benchmark_custom_simulator",
