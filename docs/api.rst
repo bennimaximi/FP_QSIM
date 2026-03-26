@@ -1,30 +1,44 @@
 API Reference
 =============
 
-.. currentmodule:: fp_qsim
+This page documents the full ``fp_qsim`` package under ``src/fp_qsim``.
 
-CustomSimulatorManual
+Package Exports
+---------------
+
+.. automodule:: fp_qsim
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Simulator Module
+----------------
+
+.. automodule:: fp_qsim.simulator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Optimized Simulator Module
+--------------------------
+
+.. automodule:: fp_qsim.simulator_optimized
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Statevector Utilities
 ---------------------
 
-.. autoclass:: fp_qsim.CustomSimulatorManual
+.. automodule:: fp_qsim.state_vector
    :members:
    :undoc-members:
+   :show-inheritance:
 
-MockSimulator
--------------
+Pauli Utilities
+---------------
 
-.. autoclass:: fp_qsim.MockSimulator
+.. automodule:: fp_qsim.pauli
    :members:
    :undoc-members:
-
-CustomSimulatorGeneral
-----------------------
-
-.. autoclass:: fp_qsim.CustomSimulatorGeneral
-   :members:
-   :undoc-members:
-
-mocked_statevector
-------------------
-
-.. autofunction:: fp_qsim.mocked_statevector
+   :show-inheritance:

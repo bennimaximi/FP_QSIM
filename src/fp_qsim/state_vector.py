@@ -19,7 +19,14 @@ def mocked_statevector(qc: qiskit.QuantumCircuit) -> np.ndarray:
             number of qubits in the circuit), representing the final state
             vector of the quantum circuit.
     """
-    qc.remove_final_measurements()
-    state_vector = Statevector(qc)
+    qc_eval = qc.copy()
+
+    # Avoid triggering layout warnings on transpiled circuits when there are
+    # no measurements to remove.
+    has_measure = any(instruction.operation.name == "measure" for instruction in qc_eval.data)
+    if has_measure:
+        qc_eval.remove_final_measurements()
+
+    state_vector = Statevector(qc_eval)
     state_vector = np.reshape(np.asarray(state_vector), (2**qc.num_qubits,))
     return state_vector
