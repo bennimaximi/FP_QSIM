@@ -88,8 +88,12 @@
         { x: 50, y: 42 },
         { x: 82, y: 68 }
       ];
+      var launchTop = 96;
+      var launchSpacingMs = 180;
+      var flightMs = 880;
+      var zoneRect = zone.getBoundingClientRect();
 
-      burstCenters.forEach(function (center, centerIndex) {
+      function spawnBurst(center, centerIndex) {
         for (var i = 0; i < 18; i += 1) {
           var spark = document.createElement("span");
           spark.className = "doc-fun-firework";
@@ -107,9 +111,32 @@
             }, 920);
           })(spark);
         }
+      }
+
+      burstCenters.forEach(function (center, centerIndex) {
+        var rocket = document.createElement("span");
+        var launchDelayMs = centerIndex * launchSpacingMs;
+        var dxPx = Math.round(((center.x - 50) / 100) * zoneRect.width);
+        var dyPx = Math.round(((center.y - launchTop) / 100) * zoneRect.height);
+
+        rocket.className = "doc-fun-rocket";
+        rocket.style.left = "50%";
+        rocket.style.top = String(launchTop) + "%";
+        rocket.style.backgroundColor = colors[centerIndex % colors.length];
+        rocket.style.animationDelay = String(launchDelayMs) + "ms";
+        rocket.style.setProperty("--rocket-dx", String(dxPx) + "px");
+        rocket.style.setProperty("--rocket-dy", String(dyPx) + "px");
+        zone.appendChild(rocket);
+
+        window.setTimeout(function () {
+          if (rocket.parentNode) {
+            rocket.parentNode.removeChild(rocket);
+          }
+          spawnBurst(center, centerIndex);
+        }, launchDelayMs + flightMs);
       });
 
-      setOutput("Fireworks launched. The docs are celebrating.");
+      setOutput("Rockets launched. Fireworks are exploding at peak.");
     }
 
     function showFact() {
