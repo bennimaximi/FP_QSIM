@@ -10,19 +10,15 @@ How to choose the right simulator for your workload
 Use this checklist when deciding which simulator to run for a circuit batch.
 
 1. Use ``MockSimulator`` when you need a Qiskit Aer-backed reference result.
-2. Use ``CustomSimulatorGeneral`` for correctness-first experiments where
-   clarity of behavior matters more than speed.
-3. Use ``CustomSimulatorManual`` when your circuit is mostly ``u`` and ``cx``
+2. Use ``CustomSimulatorManual`` when your circuit is mostly ``u`` and ``cx``
    and you want a pure-project baseline.
-4. Use ``CustomSimulatorManualOptimized(cx_backend="numba")`` for CX-heavy
+3. Use ``CustomSimulatorManualOptimized(cx_backend="numba")`` for CX-heavy
    workloads where throughput matters.
 
 Quick decision flow:
 
 - If your goal is validation against a known backend: start with
   ``MockSimulator``.
-- If your goal is implementation debugging: start with
-  ``CustomSimulatorGeneral``.
 - If your goal is runtime on medium and larger CX-dominant circuits: use
   ``CustomSimulatorManualOptimized``.
 

@@ -7,7 +7,7 @@ Package Exports
 ---------------
 
 .. automodule:: fp_qsim
-   :members:
+   :members: MockSimulator, CustomSimulatorManual, CustomSimulatorManualOptimized, mocked_statevector
    :undoc-members:
    :show-inheritance:
 
@@ -15,7 +15,7 @@ Simulator Module
 ----------------
 
 .. automodule:: fp_qsim.simulator
-   :members:
+   :members: MockSimulator, CustomSimulatorManual
    :undoc-members:
    :show-inheritance:
 

@@ -30,12 +30,11 @@ For interactive benchmarking and correctness checks, use:
 
 ``docs/notebooks/statevector_benchmark_comparison.ipynb``
 
-The notebook compares four methods on the same random circuits:
+The notebook compares three methods on the same random circuits:
 
-1. ``CustomSimulatorGeneral`` (einsum baseline)
-2. ``mocked_statevector`` (Qiskit reference)
-3. ``CustomSimulatorManualOptimized(cx_backend="python")``
-4. ``CustomSimulatorManualOptimized(cx_backend="numba")``
+1. ``mocked_statevector`` (Qiskit reference)
+2. ``CustomSimulatorManualOptimized(cx_backend="python")``
+3. ``CustomSimulatorManualOptimized(cx_backend="numba")``
 
 It includes:
 
