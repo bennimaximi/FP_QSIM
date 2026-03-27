@@ -41,6 +41,11 @@ Explore the docs
           <span class="doc-card-text">Set up dependencies and your local environment quickly.</span>
           <span class="doc-card-meta">Start here</span>
        </a>
+       <a class="doc-card" href="quickstart.html">
+          <span class="doc-card-title">Quick Start</span>
+          <span class="doc-card-text">Run your first FP-QSIM circuit in a few minutes.</span>
+          <span class="doc-card-meta">First run</span>
+       </a>
        <a class="doc-card" href="how_to.html">
           <span class="doc-card-title">How-To Guides</span>
           <span class="doc-card-text">Solve common real-world tasks with direct, practical workflows.</span>
@@ -78,8 +83,8 @@ Explore the docs
        </a>
     </div>
 
-Fun Buttons
------------
+Essential Buttons (not for fun)
+-------------------------------
 
 .. raw:: html
 
@@ -104,6 +109,7 @@ Fun Buttons
 
    developer_guide.rst
    installation.rst
+   quickstart.rst
    tutorial.rst
    how_to.rst
    explanation.rst

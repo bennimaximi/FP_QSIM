@@ -51,7 +51,6 @@ if cuda is not None:
         flat_out[i0] = u00 * a0 + u01 * a1
         flat_out[i1] = u10 * a0 + u11 * a1
 
-
     @cuda.jit
     def _apply_cx_cuda_kernel(flat: np.ndarray, control: int, target: int, n_states: int) -> None:
         """Apply a CX gate in place using one-sided swap ownership."""
@@ -73,7 +72,6 @@ else:
         """Raise when CUDA kernel is unavailable in this environment."""
         msg = "numba.cuda import failed; CUDA kernels are unavailable."
         raise RuntimeError(msg)
-
 
     def _apply_cx_cuda_kernel(*args: object, **kwargs: object) -> None:
         """Raise when CUDA kernel is unavailable in this environment."""
@@ -377,5 +375,3 @@ class CustomSimulatorManualGPU:
             return []
 
         return [self.run(circuit, shots=shots) for circuit in circuits]
-    
-

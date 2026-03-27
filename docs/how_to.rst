@@ -12,15 +12,53 @@ Use this checklist when deciding which simulator to run for a circuit batch.
 1. Use ``MockSimulator`` when you need a Qiskit Aer-backed reference result.
 2. Use ``CustomSimulatorManual`` when your circuit is mostly ``u`` and ``cx``
    and you want a pure-project baseline.
-3. Use ``CustomSimulatorManualOptimized(cx_backend="numba")`` for CX-heavy
-   workloads where throughput matters.
+3. Use ``CustomSimulatorManualOptimized(cx_backend="numba")`` for short runtime
+   requirements.
+4. Use ``CustomSimulatorManualGPU`` when CUDA is available and you want
+   GPU-accelerated ``u``/``cx`` execution paths.
 
 Quick decision flow:
 
 - If your goal is validation against a known backend: start with
   ``MockSimulator``.
-- If your goal is runtime on medium and larger CX-dominant circuits: use
-  ``CustomSimulatorManualOptimized``.
+- If your goal is runtime on general transpiled ``u``/``cx`` workloads and CUDA is not available: use ``CustomSimulatorManualOptimized``.
+- If your goal is runtime and CUDA is available: try ``CustomSimulatorManualGPU`` first, then compare against ``CustomSimulatorManualOptimized`` for your circuit mix.
+
+How to run the GPU simulator (CUDA)
+-----------------------------------
+
+Use this workflow when you want to execute statevector simulation with the
+CUDA backend.
+
+1. Ensure your environment has a CUDA-capable NVIDIA GPU and ``numba.cuda``
+   is available.
+2. Transpile to the ``["u", "cx"]`` basis for the most direct use of the
+   accelerated gate paths.
+3. Run with ``CustomSimulatorManualGPU``.
+4. Keep ``CustomSimulatorManualOptimized`` as a fallback for non-CUDA systems.
+
+Example script:
+
+.. code-block:: python
+
+    from qiskit import QuantumCircuit, transpile
+    from fp_qsim import CustomSimulatorManualGPU, CustomSimulatorManualOptimized
+
+    qc = QuantumCircuit(6)
+    qc.h(0)
+    qc.cx(0, 1)
+    qc.cx(1, 2)
+    qc.ry(0.3, 4)
+
+    tqc = transpile(qc, basis_gates=["u", "cx"], optimization_level=0)
+
+    try:
+          sim = CustomSimulatorManualGPU()
+    except RuntimeError:
+          sim = CustomSimulatorManualOptimized(cx_backend="numba")
+
+    state = sim.run(tqc)
+    print(state.shape)
 
 How to verify two simulators produce equivalent statevectors
 ------------------------------------------------------------

@@ -72,9 +72,28 @@ The project depends on several scientific and development packages, including:
 - `matplotlib`
 - `qiskit`
 - `qiskit-aer`
+- `numba`
 - `pytest`
 - `mypy`
 - `ruff`
+
+Optional CUDA support for the GPU simulator
+-------------------------------------------
+
+If you want to use ``CustomSimulatorManualGPU``, you also need:
+
+- a CUDA-capable NVIDIA GPU
+- a working CUDA driver/runtime installation
+- ``numba.cuda`` available in your Python environment
+
+Quick CUDA availability check:
+
+.. code-block:: bash
+
+   python -c "from numba import cuda; print('cuda available:', cuda.is_available())"
+
+If this prints ``False``, use ``CustomSimulatorManualOptimized`` or
+``CustomSimulatorManual`` on CPU.
 
 Verify the installation
 -----------------------

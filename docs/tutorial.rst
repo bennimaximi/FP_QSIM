@@ -11,6 +11,9 @@ By the end, you will be able to:
 3. Turn statevector amplitudes into measurement probabilities.
 4. Sample outcomes to create a game loop.
 
+If your system has CUDA available, you can also run the same flow with
+``CustomSimulatorManualGPU``.
+
 What you will build
 -------------------
 
@@ -77,6 +80,21 @@ Checkpoint:
 
 1. You should see a complex-valued statevector of length 2.
 2. The two probabilities should be non-negative and sum to 1 (within floating-point tolerance).
+
+Optional GPU variant
+--------------------
+
+On CUDA-capable systems, you can swap in the GPU simulator with minimal code
+changes:
+
+.. code-block:: python
+
+   from fp_qsim import CustomSimulatorManualGPU
+
+   sim = CustomSimulatorManualGPU()
+   state = sim.run(tqc)
+
+If CUDA is unavailable, continue with ``CustomSimulatorManual`` as shown above.
 
 Step 3: Add one playable round
 ------------------------------

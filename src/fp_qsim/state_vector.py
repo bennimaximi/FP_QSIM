@@ -18,8 +18,8 @@ def mocked_statevector(qc: qiskit.QuantumCircuit) -> np.ndarray:
 
     Returns:
         np.ndarray: A 1D complex numpy array of length 2^n (where n is the
-            number of qubits in the circuit), representing the final state
-            vector of the quantum circuit.
+        number of qubits in the circuit), representing the final state
+        vector of the quantum circuit.
 
     """
     qc_eval = qc.copy()

@@ -21,8 +21,8 @@ implementation.
 Why There Are Multiple Simulator Paths
 --------------------------------------
 
-You will see both a general tensor-contraction style and manual loop-based
-kernels in the project.
+You will see a general tensor-contraction style, manual CPU loop-based kernels,
+and a CUDA-backed manual path in the project.
 
 The general approach is valuable because:
 
@@ -34,7 +34,13 @@ The manual/optimized approach is valuable because:
 - it makes index-level behavior explicit
 - it enables targeted acceleration (for example, numba-backed kernels)
 - it is easier to benchmark specific hot paths such as single-qubit updates and
-  CX-heavy circuits
+  two-qubit gate application patterns
+
+The GPU approach is valuable because:
+
+- it accelerates the same ``u``/``cx`` hot paths on CUDA-capable systems
+- it offers a hardware-backed runtime option without changing user circuit flow
+- it keeps a CPU fallback path available when CUDA is not present
 
 In short, one path prioritizes generality and clarity of expression, while the
 other prioritizes control over performance-critical details.

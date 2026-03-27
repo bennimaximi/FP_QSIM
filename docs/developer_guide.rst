@@ -10,12 +10,13 @@ What This Project Is
 FP-QSIM is a statevector-focused quantum simulation project with two goals:
 
 1. Provide clear simulator implementations for correctness and inspection.
-2. Benchmark custom kernels against reference workflows (especially CX-heavy paths).
+2. Benchmark custom kernels against reference workflows (especially random circuits).
 
 The codebase combines:
 
 - baseline simulators in ``src/fp_qsim/simulator.py``
 - optimized kernels and backend switching in ``src/fp_qsim/simulator_optimized.py``
+- CUDA-backed simulator kernels in ``src/fp_qsim/simulator_gpu.py``
 - validation and benchmark tests under ``tests/``
 - Sphinx docs and executable notebooks under ``docs/``
 
@@ -34,7 +35,7 @@ Main source modules:
 - ``src/fp_qsim/__init__.py``
   Re-exports public API symbols:
    ``MockSimulator``, ``CustomSimulatorManual``,
-   ``CustomSimulatorManualOptimized``, and
+   ``CustomSimulatorManualGPU``, ``CustomSimulatorManualOptimized``, and
   ``mocked_statevector``.
 
 - ``src/fp_qsim/simulator.py``
@@ -52,6 +53,10 @@ Main source modules:
   The backend switch is controlled via
   ``cx_backend: Literal["python", "numba"]``.
 
+- ``src/fp_qsim/simulator_gpu.py``
+   Contains ``CustomSimulatorManualGPU`` and CUDA kernels for accelerated
+   ``u``/``cx`` gate paths with CPU fallback behavior for unsupported gates.
+
 - ``src/fp_qsim/state_vector.py``
   Provides ``mocked_statevector`` as a reference statevector helper.
 
@@ -63,6 +68,7 @@ Test modules:
 - ``tests/test_simulator.py``: baseline correctness and simulator-runtime benchmark group.
 - ``tests/test_simulator_optimized.py``: optimized backend correctness,
   backend equivalence, run-batch checks, and CX-heavy benchmark group.
+- ``tests/test_simulator_cuda.py``: CUDA/GPU simulator behavior checks.
 
 How to Set It Up
 ----------------
@@ -188,7 +194,7 @@ Typical extension patterns:
 
 1. Add a new simulator variant.
    - Implement the class in ``src/fp_qsim/simulator.py`` or
-     ``src/fp_qsim/simulator_optimized.py``.
+       ``src/fp_qsim/simulator_optimized.py`` or ``src/fp_qsim/simulator_gpu.py``.
    - Keep ``run(circuit, shots=...) -> np.ndarray`` semantics consistent.
    - Export it via ``src/fp_qsim/__init__.py`` when it is part of public API.
 
@@ -230,3 +236,6 @@ Known Pitfalls
   Breaking that ``sys.path`` setup can cause autodoc import failures.
 
 - Randomized tests/benchmarks must use explicit seeds to avoid flaky behavior.
+
+- ``CustomSimulatorManualGPU`` requires CUDA-capable hardware and a working
+   ``numba.cuda`` setup. Keep CPU fallbacks documented for non-CUDA systems.
