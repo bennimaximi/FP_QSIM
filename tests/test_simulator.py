@@ -23,6 +23,24 @@ def reference_simulator() -> AerSimulator:
     return AerSimulator(method="statevector")
 
 
+def reference_simulator_fast() -> AerSimulator:
+    """Create an AerSimulator configured for benchmark throughput.
+
+    Returns:
+        AerSimulator: Statevector simulator with aggressive fusion and
+            automatic thread utilization.
+
+    """
+    simulator = AerSimulator(method="statevector")
+    simulator.set_options(
+        fusion_enable=True,
+        fusion_threshold=14,
+        max_parallel_threads=0,
+        max_parallel_experiments=1,
+    )
+    return simulator
+
+
 def custom_simulator() -> CustomSimulatorManualOptimized:
     """Create an instance of the manual custom simulator.
 
@@ -195,8 +213,8 @@ def test_random_circuit() -> None:
 
 
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(5, 17))
-def htest_benchmark_custom_simulator(benchmark: BenchmarkFixture, n_qubits: int) -> None:
+@pytest.mark.parametrize("n_qubits", [6, 8, 12, 16])
+def test_benchmark_custom_simulator(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmarks the runtime of the custom simulator.
 
     Runs a randomly generated circuit of depth (2 * n_qubits) and measures
@@ -222,8 +240,8 @@ def htest_benchmark_custom_simulator(benchmark: BenchmarkFixture, n_qubits: int)
 
 
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(5, 17))
-def htest_benchmark_aer_simulator(benchmark: BenchmarkFixture, n_qubits: int) -> None:
+@pytest.mark.parametrize("n_qubits", [6, 8, 12, 16, 20, 24])
+def test_benchmark_aer_simulator(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmarks the runtime of the reference Qiskit Aer simulator.
 
     Runs a randomly generated circuit of depth (2 * n_qubits) and measures
@@ -238,12 +256,15 @@ def htest_benchmark_aer_simulator(benchmark: BenchmarkFixture, n_qubits: int) ->
 
     """
     depth = 2 * n_qubits
-    ref_sim = reference_simulator()
+    ref_sim = reference_simulator_fast()
     qc = random_circuit(n_qubits, depth, measure=False, seed=42)
     circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
-    compiled_circuit = transpile(circuit_ucx, ref_sim)
+    compiled_circuit = transpile(circuit_ucx, ref_sim, optimization_level=3)
     compiled_circuit.save_statevector()
     benchmark.extra_info["qubits"] = n_qubits
     benchmark.extra_info["simulator"] = "aer"
+    benchmark.extra_info["optimization_level"] = 3
+    benchmark.extra_info["fusion_enable"] = True
+    benchmark.extra_info["max_parallel_threads"] = "auto"
     benchmark.extra_info["save_statevector"] = "after_transpile"
     benchmark(lambda: ref_sim.run(compiled_circuit, shots=1024).result())

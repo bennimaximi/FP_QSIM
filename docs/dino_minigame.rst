@@ -1,13 +1,13 @@
-Offline Runner Mini Game
+Runner Mini Game
 ========================
 
-This is an original offline-runner-style mini game added to the docs examples.
+This is a runner-style mini game.
 
 .. raw:: html
 
     <section class="dino-game-shell" id="dino-game-shell">
-      <p class="dino-game-kicker">Mini Game Example</p>
-      <h2 class="dino-game-title">Offline Runner</h2>
+      <p class="dino-game-kicker">Mini Game</p>
+      <h2 class="dino-game-title">Dino Runner</h2>
       <p class="dino-game-help">Press <strong>Space</strong> / <strong>Arrow Up</strong> / tap the canvas to jump. Avoid obstacles.</p>
 
       <div class="dino-game-bar">

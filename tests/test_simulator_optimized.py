@@ -1,6 +1,8 @@
 """Tests and benchmarks for optimized simulator parity and performance."""
 
 import numpy as np
+import pytest
+from pytest_benchmark.fixture import BenchmarkFixture
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.random import random_circuit
 
@@ -99,3 +101,51 @@ def test_run_batch_equivalent_to_serial() -> None:
     for expected, candidate in zip(serial, batch, strict=False):
         aligned = align_global_phase(expected, candidate)
         assert np.allclose(expected, aligned)
+
+
+@pytest.mark.benchmark(group="simulator-runtime")
+@pytest.mark.parametrize("n_qubits", [6, 8, 12, 16])
+def test_benchmark_optimized_python_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> None:
+    """Benchmark optimized simulator with python backend on random circuits.
+
+    Args:
+        benchmark: pytest-benchmark fixture used to time execution.
+        n_qubits: Number of qubits in the generated benchmark circuit.
+
+    Returns:
+        None.
+
+    """
+    depth = 2 * n_qubits
+    circuit = random_circuit(n_qubits, depth, measure=False, seed=42)
+    circuit_ucx = transpile(circuit, basis_gates=["u", "cx"])
+
+    simulator = CustomSimulatorManualOptimized(cx_backend="python")
+    benchmark.extra_info["qubits"] = n_qubits
+    benchmark.extra_info["simulator"] = "optimized-python"
+    benchmark.extra_info["cx_backend"] = simulator.effective_cx_backend
+    benchmark(lambda: simulator.run(circuit_ucx, shots=1024))
+
+
+@pytest.mark.benchmark(group="simulator-runtime")
+@pytest.mark.parametrize("n_qubits", [6, 8, 12, 16])
+def test_benchmark_optimized_numba_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> None:
+    """Benchmark optimized simulator with numba backend on random circuits.
+
+    Args:
+        benchmark: pytest-benchmark fixture used to time execution.
+        n_qubits: Number of qubits in the generated benchmark circuit.
+
+    Returns:
+        None.
+
+    """
+    depth = 2 * n_qubits
+    circuit = random_circuit(n_qubits, depth, measure=False, seed=42)
+    circuit_ucx = transpile(circuit, basis_gates=["u", "cx"])
+
+    simulator = CustomSimulatorManualOptimized(cx_backend="numba")
+    benchmark.extra_info["qubits"] = n_qubits
+    benchmark.extra_info["simulator"] = "optimized-numba"
+    benchmark.extra_info["cx_backend"] = simulator.effective_cx_backend
+    benchmark(lambda: simulator.run(circuit_ucx, shots=1024))

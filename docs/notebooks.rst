@@ -3,6 +3,9 @@ Notebook Examples
 
 The project includes interactive notebooks to demonstrate the simulator behavior.
 
+The listed notebooks primarily cover CPU and Aer comparison workflows.
+For CUDA/GPU execution patterns, see :doc:`how_to`.
+
 Examples
 ----------------------
 

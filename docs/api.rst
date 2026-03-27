@@ -7,7 +7,7 @@ Package Exports
 ---------------
 
 .. automodule:: fp_qsim
-   :members: MockSimulator, CustomSimulatorManual, CustomSimulatorManualOptimized, mocked_statevector
+   :members: MockSimulator, CustomSimulatorManual, CustomSimulatorManualGPU, CustomSimulatorManualOptimized, mocked_statevector
    :undoc-members:
    :show-inheritance:
 
@@ -23,6 +23,20 @@ Optimized Simulator Module
 --------------------------
 
 .. automodule:: fp_qsim.simulator_optimized
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+GPU Simulator Module
+--------------------
+
+Use ``CustomSimulatorManualGPU`` when you have a CUDA-capable NVIDIA GPU and
+your circuits are dominated by ``u`` and ``cx`` gates. This backend accelerates
+those gate paths with Numba CUDA kernels and is often a good choice for larger
+statevectors, while still supporting other gates through a general fallback
+path. If CUDA is unavailable, use ``CustomSimulatorManualOptimized`` instead.
+
+.. automodule:: fp_qsim.simulator_gpu
    :members:
    :undoc-members:
    :show-inheritance:

@@ -7,6 +7,9 @@ qubit counts from 5 to 16.
 Both benchmark paths append ``save_statevector()`` after transpilation to ensure
 the documented results represent statevector-save workflow overhead consistently.
 
+The published plots on this page focus on CPU/Aer baselines. GPU simulator
+results are hardware-dependent and should be measured locally when relevant.
+
 The ratio curve is defined as:
 
 custom runtime / aer runtime
@@ -59,6 +62,13 @@ CX-Heavy Median Plot
    :alt: Median runtime and speedup plot for cx-heavy circuits from 5 to 16 qubits
    :width: 95%
 
+Numba Speedup Summary Plot
+--------------------------
+
+.. image:: _static/numba_speedup_summary.png
+   :alt: Speedup summary bars for optimized_numba against baselines at selected qubit counts
+   :width: 85%
+
 Interpretation
 --------------
 
@@ -74,8 +84,9 @@ The median curves show two clear trends:
    quickly and reaches a large improvement at 16 qubits.
 
 3. Practical takeaway: for tiny circuits, baseline/manual execution can still be
-   fine, while medium-to-large CX-dominant workloads benefit substantially from
-   the optimized implementation.
+   fine. The optimized implementation is intended for general transpiled
+   ``u``/``cx`` workloads, and the CX-heavy plot highlights one stress-case where
+   its scaling advantage is easy to see.
 
 4. Notebook plot takeaway: in the sweep plots, the optimized numba backend
    should remain below optimized python in runtime for larger qubit counts,
