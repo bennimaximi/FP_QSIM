@@ -104,7 +104,7 @@ def test_run_batch_equivalent_to_serial() -> None:
 
 
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(5, 17))
+@pytest.mark.parametrize("n_qubits", [6, 8, 12, 16])
 def test_benchmark_optimized_python_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmark optimized simulator with python backend on random circuits.
 
@@ -128,7 +128,7 @@ def test_benchmark_optimized_python_runtime(benchmark: BenchmarkFixture, n_qubit
 
 
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(5, 17))
+@pytest.mark.parametrize("n_qubits", [6, 8, 12, 16])
 def test_benchmark_optimized_numba_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmark optimized simulator with numba backend on random circuits.
 

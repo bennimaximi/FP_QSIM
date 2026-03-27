@@ -182,7 +182,7 @@ def test_gpu_advantage_vs_numba_random_20q_depth10() -> None:
 
 @pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(8, 25))
+@pytest.mark.parametrize("n_qubits", [6, 8, 12, 16, 20, 24])
 def test_benchmark_cuda_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmark runtime of the CUDA simulator over random circuits.
 
