@@ -1,111 +1,126 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent
-INPUT_JSON = ROOT / "_static" / "benchmark_results_q5_16.json"
-OUTPUT_RUNTIME_PNG = ROOT / "_static" / "benchmark_q5_16.png"
-OUTPUT_CX_HEAVY_PNG = ROOT / "_static" / "benchmark_cx_heavy_q5_16.png"
+INPUT_JSON = ROOT / "_static" / "benchmark_results_q6_24.json"
+OUTPUT_RUNTIME_PNG = ROOT / "_static" / "benchmark_runtime_q6_24.png"
+OUTPUT_SPEEDUP_PNG = ROOT / "_static" / "benchmark_speedup_vs_aer_q6_24.png"
+
+SERIES_BY_TEST_NAME = {
+    "test_benchmark_custom_simulator": "custom",
+    "test_benchmark_optimized_python_runtime": "optimized-python",
+    "test_benchmark_optimized_numba_runtime": "optimized-numba",
+    "test_benchmark_aer_simulator": "aer",
+    "test_benchmark_cuda_runtime": "cuda",
+}
 
 
-def _load_medians_by_name(path: Path, lhs_token: str, rhs_token: str) -> tuple[dict[int, float], dict[int, float]]:
-    """Load benchmark medians grouped by lhs/rhs name tokens.
+def _load_runtime_series(path: Path) -> dict[str, dict[int, float]]:
+    """Load benchmark median runtimes grouped by simulator label.
 
     Args:
         path: Path to the pytest-benchmark JSON results file.
-        lhs_token: Substring identifying left-hand benchmark entries.
-        rhs_token: Substring identifying right-hand benchmark entries.
 
     Returns:
-        Two maps from qubit count to median runtime in milliseconds.
+        Mapping of simulator label to {n_qubits: median_ms}.
 
     """
     data = json.loads(path.read_text(encoding="utf-8"))
-    lhs: dict[int, float] = {}
-    rhs: dict[int, float] = {}
+    series: dict[str, dict[int, float]] = {label: {} for label in SERIES_BY_TEST_NAME.values()}
 
     for entry in data.get("benchmarks", []):
+        name = str(entry.get("name", ""))
+        test_name = name.split("[")[0]
+        label = SERIES_BY_TEST_NAME.get(test_name)
+        if label is None:
+            continue
+
         params = entry.get("params", {})
-        n_qubits = int(params.get("n_qubits"))
+        n_qubits_raw = params.get("n_qubits")
+        if n_qubits_raw is None:
+            continue
+
+        n_qubits = int(n_qubits_raw)
         median_seconds = float(entry["stats"]["median"])
         median_ms = 1000.0 * median_seconds
+        series[label][n_qubits] = median_ms
 
-        name = str(entry.get("name", ""))
-        if lhs_token in name:
-            lhs[n_qubits] = median_ms
-        elif rhs_token in name:
-            rhs[n_qubits] = median_ms
-
-    return lhs, rhs
+    return series
 
 
-def _validate_qubit_range(qubits: Iterable[int]) -> None:
-    """Validate that benchmark results cover qubits 5 through 16.
+def _plot_runtime(series: dict[str, dict[int, float]], output_path: Path) -> None:
+    """Plot all available runtime curves and save the figure.
 
     Args:
-        qubits: Qubit counts found in parsed benchmark entries.
-
-    Raises:
-        ValueError: If the observed qubit set differs from the expected range.
-
-    Returns:
-        None.
-
-    """
-    expected = set(range(5, 17))
-    observed = set(qubits)
-    if observed != expected:
-        missing = sorted(expected - observed)
-        extra = sorted(observed - expected)
-        raise ValueError(f"Unexpected qubit range. Missing={missing}, extra={extra}")
-
-
-def _plot_pair(
-    qubits: list[int],
-    lhs_ms: list[float],
-    rhs_ms: list[float],
-    ratio: list[float],
-    lhs_label: str,
-    rhs_label: str,
-    ratio_label: str,
-    title: str,
-    output_path: Path,
-) -> None:
-    """Plot runtime curves and ratio curve, then save to disk.
-
-    Args:
-        qubits: Qubit counts for the x-axis.
-        lhs_ms: Left-hand median runtimes in milliseconds.
-        rhs_ms: Right-hand median runtimes in milliseconds.
-        ratio: Elementwise ratio series for the second subplot.
-        lhs_label: Legend label for lhs_ms.
-        rhs_label: Legend label for rhs_ms.
-        ratio_label: Y-axis label for the ratio subplot.
-        title: Figure title for the runtime subplot.
+        series: Mapping of simulator labels to runtime data.
         output_path: Destination path for the rendered PNG.
 
     Returns:
         None.
 
     """
-    fig, (ax_time, ax_ratio) = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
+    fig, ax = plt.subplots(figsize=(10, 5.5))
 
-    ax_time.plot(qubits, lhs_ms, marker="o", label=lhs_label)
-    ax_time.plot(qubits, rhs_ms, marker="o", label=rhs_label)
-    ax_time.set_ylabel("Median runtime [ms]")
-    ax_time.set_title(title)
-    ax_time.grid(alpha=0.3)
-    ax_time.legend()
+    for label, data in series.items():
+        if not data:
+            continue
+        qubits = sorted(data)
+        values = [data[q] for q in qubits]
+        ax.plot(qubits, values, marker="o", label=label)
 
-    ax_ratio.plot(qubits, ratio, marker="o", color="tab:red")
-    ax_ratio.axhline(1.0, color="gray", linestyle="--", linewidth=1)
-    ax_ratio.set_xlabel("Number of qubits")
-    ax_ratio.set_ylabel(ratio_label)
-    ax_ratio.grid(alpha=0.3)
+    ax.set_xlabel("Number of qubits")
+    ax.set_ylabel("Median runtime [ms]")
+    ax.set_title("Simulator Benchmark Runtime (q = 6, 8, 12, 16, 20, 24 where available)")
+    ax.grid(alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    print(f"Wrote plot to {output_path}")
+
+
+def _plot_speedup_vs_aer(series: dict[str, dict[int, float]], output_path: Path) -> None:
+    """Plot speedup curves relative to Aer and save the figure.
+
+    Args:
+        series: Mapping of simulator labels to runtime data.
+        output_path: Destination path for the rendered PNG.
+
+    Returns:
+        None.
+
+    """
+    aer = series.get("aer", {})
+    if not aer:
+        raise ValueError("No Aer benchmark entries found in JSON input.")
+
+    candidates = ["custom", "optimized-python", "optimized-numba", "cuda"]
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+
+    has_any_curve = False
+    for candidate in candidates:
+        runtime = series.get(candidate, {})
+        common_qubits = sorted(set(aer) & set(runtime))
+        if not common_qubits:
+            continue
+
+        speedup = [aer[q] / runtime[q] for q in common_qubits]
+        ax.plot(common_qubits, speedup, marker="o", label=f"aer/{candidate}")
+        has_any_curve = True
+
+    if not has_any_curve:
+        raise ValueError("No overlapping qubit points found for speedup plot.")
+
+    ax.axhline(1.0, color="gray", linestyle="--", linewidth=1)
+    ax.set_xlabel("Number of qubits")
+    ax.set_ylabel("Speedup factor")
+    ax.set_title("Speedup Relative to Aer (>1 means candidate is faster)")
+    ax.grid(alpha=0.3)
+    ax.legend()
 
     fig.tight_layout()
     fig.savefig(output_path, dpi=150)
@@ -113,67 +128,18 @@ def _plot_pair(
 
 
 def main() -> None:
-    """Generate benchmark plots for simulator runtime and CX-heavy speedup.
+    """Generate and save benchmark runtime plots from pytest JSON output.
 
     Returns:
         None.
 
     """
-    custom, aer = _load_medians_by_name(
-        INPUT_JSON,
-        lhs_token="test_benchmark_custom_simulator",
-        rhs_token="test_benchmark_aer_simulator",
-    )
-    qubits = sorted(set(custom) & set(aer))
+    series = _load_runtime_series(INPUT_JSON)
+    if not any(series.values()):
+        raise ValueError("No recognized benchmark entries found in JSON input.")
 
-    if not qubits:
-        raise ValueError("No matching simulator-runtime benchmark entries found in JSON input.")
-
-    _validate_qubit_range(qubits)
-
-    custom_ms = [custom[q] for q in qubits]
-    aer_ms = [aer[q] for q in qubits]
-    ratio = [c / a for c, a in zip(custom_ms, aer_ms, strict=False)]
-
-    _plot_pair(
-        qubits=qubits,
-        lhs_ms=custom_ms,
-        rhs_ms=aer_ms,
-        ratio=ratio,
-        lhs_label="Custom simulator median",
-        rhs_label="Qiskit Aer median",
-        ratio_label="Ratio (custom / aer)",
-        title="Benchmark: Qiskit Aer vs Custom Simulator (5 to 16 qubits)",
-        output_path=OUTPUT_RUNTIME_PNG,
-    )
-
-    baseline, optimized = _load_medians_by_name(
-        INPUT_JSON,
-        lhs_token="test_benchmark_cx_heavy_baseline_manual",
-        rhs_token="test_benchmark_cx_heavy_optimized",
-    )
-    qubits_cx = sorted(set(baseline) & set(optimized))
-
-    if not qubits_cx:
-        raise ValueError("No matching cx-heavy benchmark entries found in JSON input.")
-
-    _validate_qubit_range(qubits_cx)
-
-    baseline_ms = [baseline[q] for q in qubits_cx]
-    optimized_ms = [optimized[q] for q in qubits_cx]
-    speedup = [b / o for b, o in zip(baseline_ms, optimized_ms, strict=False)]
-
-    _plot_pair(
-        qubits=qubits_cx,
-        lhs_ms=baseline_ms,
-        rhs_ms=optimized_ms,
-        ratio=speedup,
-        lhs_label="Manual baseline median",
-        rhs_label="Manual optimized median",
-        ratio_label="Speedup (baseline / optimized)",
-        title="Benchmark: CX-heavy Baseline vs Optimized (5 to 16 qubits)",
-        output_path=OUTPUT_CX_HEAVY_PNG,
-    )
+    _plot_runtime(series, OUTPUT_RUNTIME_PNG)
+    _plot_speedup_vs_aer(series, OUTPUT_SPEEDUP_PNG)
 
 
 if __name__ == "__main__":
