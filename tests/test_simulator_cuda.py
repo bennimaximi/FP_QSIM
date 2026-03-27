@@ -40,30 +40,6 @@ def align_global_phase(reference: np.ndarray, candidate: np.ndarray) -> np.ndarr
     return candidate * (reference[anchor] / candidate[anchor])
 
 
-def make_cx_heavy_circuit(n_qubits: int, layers: int) -> QuantumCircuit:
-    """Build a CX-dominant circuit to stress the CUDA CX kernel path.
-
-    Args:
-        n_qubits: Number of qubits in the circuit.
-        layers: Number of alternating CX layers.
-
-    Returns:
-        Transpiled circuit in the ["u", "cx"] basis.
-
-    """
-    qc = QuantumCircuit(n_qubits)
-    for q in range(n_qubits):
-        qc.h(q)
-
-    for _ in range(layers):
-        for q in range(0, n_qubits - 1, 2):
-            qc.cx(q, q + 1)
-        for q in range(1, n_qubits - 1, 2):
-            qc.cx(q, q + 1)
-
-    return transpile(qc, basis_gates=["u", "cx"])
-
-
 def measure_runtime_seconds(
     run_callable: Callable[[], np.ndarray],
     *,
@@ -229,28 +205,3 @@ def test_benchmark_cuda_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> N
     benchmark.extra_info["threads_per_block"] = simulator.threads_per_block
 
     benchmark(lambda: simulator.run(circuit_ucx, shots=1024))
-
-
-@pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
-@pytest.mark.benchmark(group="cx-heavy-runtime-cuda")
-@pytest.mark.parametrize("n_qubits", range(8, 25))
-def test_benchmark_cuda_cx_heavy(benchmark: BenchmarkFixture, n_qubits: int) -> None:
-    """Benchmark CUDA simulator on CX-heavy circuits.
-
-    Args:
-        benchmark: pytest-benchmark fixture used to time execution.
-        n_qubits: Number of qubits in the generated benchmark circuit.
-
-    Returns:
-        None.
-
-    """
-    circuit = make_cx_heavy_circuit(n_qubits=n_qubits, layers=4)
-    simulator = CustomSimulatorManualGPU()
-
-    benchmark.extra_info["qubits"] = n_qubits
-    benchmark.extra_info["simulator"] = "manual-gpu"
-    benchmark.extra_info["cx_backend"] = simulator.effective_cx_backend
-    benchmark.extra_info["threads_per_block"] = simulator.threads_per_block
-
-    benchmark(lambda: simulator.run(circuit, shots=1024))
