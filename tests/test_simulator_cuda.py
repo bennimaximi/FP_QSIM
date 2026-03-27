@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
+
 import numpy as np
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
@@ -9,6 +12,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.random import random_circuit
 
 from fp_qsim.simulator_gpu import CustomSimulatorManualGPU
+from fp_qsim.simulator_optimized import CustomSimulatorManualOptimized
 from fp_qsim.state_vector import mocked_statevector
 
 try:
@@ -36,28 +40,33 @@ def align_global_phase(reference: np.ndarray, candidate: np.ndarray) -> np.ndarr
     return candidate * (reference[anchor] / candidate[anchor])
 
 
-def make_cx_heavy_circuit(n_qubits: int, layers: int) -> QuantumCircuit:
-    """Build a CX-dominant circuit to stress the CUDA CX kernel path.
+def measure_runtime_seconds(
+    run_callable: Callable[[], np.ndarray],
+    *,
+    repeats: int = 3,
+    warmup_runs: int = 1,
+) -> np.ndarray:
+    """Measure repeated runtime for a simulator run callable.
 
     Args:
-        n_qubits: Number of qubits in the circuit.
-        layers: Number of alternating CX layers.
+        run_callable: Callable that executes one simulation run.
+        repeats: Number of measured runs.
+        warmup_runs: Number of unmeasured warmup runs.
 
     Returns:
-        Transpiled circuit in the ["u", "cx"] basis.
+        Array of runtimes in seconds.
 
     """
-    qc = QuantumCircuit(n_qubits)
-    for q in range(n_qubits):
-        qc.h(q)
+    for _ in range(warmup_runs):
+        run_callable()
 
-    for _ in range(layers):
-        for q in range(0, n_qubits - 1, 2):
-            qc.cx(q, q + 1)
-        for q in range(1, n_qubits - 1, 2):
-            qc.cx(q, q + 1)
+    timings: list[float] = []
+    for _ in range(repeats):
+        start = time.perf_counter()
+        run_callable()
+        timings.append(time.perf_counter() - start)
 
-    return transpile(qc, basis_gates=["u", "cx"])
+    return np.asarray(timings, dtype=np.float64)
 
 
 def test_cuda_backend_availability_contract() -> None:
@@ -118,6 +127,60 @@ def test_cuda_matches_reference_random() -> None:
 
 
 @pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
+def test_cuda_matches_numba_random_20q_depth10() -> None:
+    """Verify CUDA and Numba backends produce equivalent states.
+
+    Returns:
+        None.
+
+    """
+    qc = random_circuit(20, 10, measure=False, seed=2026)
+    circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
+
+    gpu_result = CustomSimulatorManualGPU().run(circuit_ucx)
+    numba_result = CustomSimulatorManualOptimized(cx_backend="numba").run(circuit_ucx)
+
+    aligned_gpu = align_global_phase(numba_result, gpu_result)
+    assert np.allclose(numba_result, aligned_gpu)
+
+
+@pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
+def test_gpu_advantage_vs_numba_random_20q_depth10() -> None:
+    """Compare GPU and Numba runtimes on a fixed random 20q depth-10 circuit.
+
+    Returns:
+        None.
+
+    """
+    qc = random_circuit(20, 10, measure=False, seed=2027)
+    circuit_ucx = transpile(qc, basis_gates=["u", "cx"])
+
+    gpu_sim = CustomSimulatorManualGPU()
+    numba_sim = CustomSimulatorManualOptimized(cx_backend="numba")
+
+    # Trigger JIT/kernel warmup once before timed runs.
+    _ = numba_sim.run(circuit_ucx)
+    _ = gpu_sim.run(circuit_ucx)
+
+    gpu_times = measure_runtime_seconds(lambda: gpu_sim.run(circuit_ucx), repeats=3, warmup_runs=1)
+    numba_times = measure_runtime_seconds(lambda: numba_sim.run(circuit_ucx), repeats=3, warmup_runs=1)
+
+    gpu_median = float(np.median(gpu_times))
+    numba_median = float(np.median(numba_times))
+    speedup = numba_median / gpu_median
+
+    print("\n=== GPU vs Numba Runtime Comparison (20 qubits, depth 10) ===")
+    print(f"GPU runs (ms):   {[round(1000.0 * t, 2) for t in gpu_times]}")
+    print(f"Numba runs (ms): {[round(1000.0 * t, 2) for t in numba_times]}")
+    print(f"GPU median (ms):   {1000.0 * gpu_median:.2f}")
+    print(f"Numba median (ms): {1000.0 * numba_median:.2f}")
+    print(f"Speedup (numba/gpu): {speedup:.2f}x")
+    print("============================================================\n")
+
+    assert speedup > 1.0, f"Expected GPU advantage over numba, got speedup={speedup:.2f}x"
+
+
+@pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
 @pytest.mark.benchmark(group="cuda-runtime")
 @pytest.mark.parametrize("n_qubits", range(8, 25))
 def test_benchmark_cuda_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> None:
@@ -142,28 +205,3 @@ def test_benchmark_cuda_runtime(benchmark: BenchmarkFixture, n_qubits: int) -> N
     benchmark.extra_info["threads_per_block"] = simulator.threads_per_block
 
     benchmark(lambda: simulator.run(circuit_ucx, shots=1024))
-
-
-@pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
-@pytest.mark.benchmark(group="cx-heavy-runtime-cuda")
-@pytest.mark.parametrize("n_qubits", range(8, 25))
-def test_benchmark_cuda_cx_heavy(benchmark: BenchmarkFixture, n_qubits: int) -> None:
-    """Benchmark CUDA simulator on CX-heavy circuits.
-
-    Args:
-        benchmark: pytest-benchmark fixture used to time execution.
-        n_qubits: Number of qubits in the generated benchmark circuit.
-
-    Returns:
-        None.
-
-    """
-    circuit = make_cx_heavy_circuit(n_qubits=n_qubits, layers=4)
-    simulator = CustomSimulatorManualGPU()
-
-    benchmark.extra_info["qubits"] = n_qubits
-    benchmark.extra_info["simulator"] = "manual-gpu"
-    benchmark.extra_info["cx_backend"] = simulator.effective_cx_backend
-    benchmark.extra_info["threads_per_block"] = simulator.threads_per_block
-
-    benchmark(lambda: simulator.run(circuit, shots=1024))
