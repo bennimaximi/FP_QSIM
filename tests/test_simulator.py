@@ -240,7 +240,7 @@ def test_benchmark_custom_simulator(benchmark: BenchmarkFixture, n_qubits: int) 
 
 
 @pytest.mark.benchmark(group="simulator-runtime")
-@pytest.mark.parametrize("n_qubits", range(5, 17))
+@pytest.mark.parametrize("n_qubits", range(5, 25))
 def test_benchmark_aer_simulator(benchmark: BenchmarkFixture, n_qubits: int) -> None:
     """Benchmarks the runtime of the reference Qiskit Aer simulator.
 
